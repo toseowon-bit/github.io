@@ -346,8 +346,9 @@ const ArrowSVG = () => (
 );
 
 const products = [
-    { id:1, name:"드롱기 데디카 메탈릭 EC685", price:"248,000원", image:"https://images.unsplash.com/photo-1579992357154-faf4bfe95b3d?w=300&q=80", tag:"AI 1순위", score:98 },
-    { id:2, name:"가찌아 클래식 프로 2024", price:"589,000원", image:"https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=300&q=80", tag:"전문가 추천", score:94 },
+    { id:1, name:"MacBook Air M3 13"", price:"₩1,590,000", image:"https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=300&q=80", tag:"AI Pick #1", score:99 },
+    { id:2, name:"Sony WH-1000XM5", price:"₩379,000", image:"https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&q=80", tag:"Best Seller", score:97 },
+    { id:3, name:"iPhone 16 Pro 256GB", price:"₩1,350,000", image:"https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=300&q=80", tag:"Top Rated", score:96 },
 ];
 
 const WaitlistModal = ({ onClose }) => {
@@ -357,7 +358,7 @@ const WaitlistModal = ({ onClose }) => {
 
     const handleSubmit = async () => {
         if (!email.trim() || !email.includes('@') || !email.includes('.')) {
-            setError('올바른 이메일 주소를 입력해 주세요.');
+            setError('Please enter a valid email address.');
             return;
         }
         setError('');
@@ -377,22 +378,23 @@ const WaitlistModal = ({ onClose }) => {
             <div className="modal-box" onClick={e => e.stopPropagation()}>
                 <button className="modal-close" onClick={onClose}>✕</button>
                 {step === 'form' && (<>
-                    <div className="modal-badge">✦ 서비스 출시 예정</div>
-                    <h2>TRYGO가 곧<br/>출시됩니다 🚀</h2>
-                    <p className="modal-desc">얼리 액세스를 신청하시면 <strong style={{color:'#4F46E5'}}>출시 즉시 특별 할인 코드</strong>를 보내드립니다.</p>
-                    {[['✦','얼리버드 전용 20% 할인 코드'],['⚡','에이션틱 AI 베타 우선 체험'],['★','프리미엄 멤버십 1개월 무료']].map(([icon,text]) => (
+                    <div className="modal-badge">✦ Coming Soon</div>
+                    <h2>TRYGO is
+launching soon 🚀</h2>
+                    <p className="modal-desc">Sign up for early access and receive a <strong style={{color:'#4F46E5'}}>special discount code</strong> at launch.</p>
+                    {[['✦','Exclusive 20% early-bird discount'],['⚡','Priority access to Asiantic AI beta'],['★','1 month free premium membership']].map(([icon,text]) => (
                         <div className="benefit-item" key={text}>
                             <div className="benefit-icon">{icon}</div>
                             <span className="benefit-text">{text}</span>
                         </div>
                     ))}
-                    <input className="email-input" type="email" placeholder="이메일 주소를 입력하세요"
+                    <input className="email-input" type="email" placeholder="Enter your email address"
                         value={email} onChange={e => { setEmail(e.target.value); setError(''); }}
                         onKeyDown={e => e.key === 'Enter' && handleSubmit()}
                     />
                     {error && <p className="email-error">{error}</p>}
-                    <button className="submit-btn" onClick={handleSubmit}>✨ 할인 코드 받기</button>
-                    <p className="modal-note">스팸 없음 · 언제든 수신 거부 가능</p>
+                    <button className="submit-btn" onClick={handleSubmit}>✨ Get Discount Code</button>
+                    <p className="modal-note">No spam · Unsubscribe anytime</p>
                 </>)}
 
                 {step === 'saving' && (
@@ -404,19 +406,19 @@ const WaitlistModal = ({ onClose }) => {
                                 </svg>
                             </div>
                         </div>
-                        <h2 style={{fontSize:20,marginBottom:8}}>저장 중입니다...</h2>
-                        <p style={{color:'#94a3b8',fontSize:14}}>잠시만 기다려 주세요 🙏</p>
+                        <h2 style={{fontSize:20,marginBottom:8}}>Saving...</h2>
+                        <p style={{color:'#94a3b8',fontSize:14}}>Please wait a moment 🙏</p>
                     </div>
                 )}
 
                 {step === 'success' && (
                     <div className="success-wrap">
                         <div className="success-icon">🎉</div>
-                        <h2>등록 완료!</h2>
-                        <p><strong style={{color:'#4F46E5'}}>{email}</strong>으로</p>
-                        <p>출시 알림과 할인 코드를 보내드릴게요.</p>
-                        <p style={{color:'#94a3b8',fontSize:12,marginTop:8}}>빠른 출시를 위해 열심히 준비 중입니다 🙏</p>
-                        <button className="close-btn" onClick={onClose}>닫기</button>
+                        <h2>You're in! 🎉</h2>
+                        <p>We'll send updates to <strong style={{color:'#4F46E5'}}>{email}</strong></p>
+                        <p>We'll send you a launch alert and discount code.</p>
+                        <p style={{color:'#94a3b8',fontSize:12,marginTop:8}}>Working hard to launch soon 🙏</p>
+                        <button className="close-btn" onClick={onClose}>Close</button>
                     </div>
                 )}
             </div>
@@ -432,51 +434,51 @@ const App = () => {
     const [tagType, setTagType] = useState(''); // 'taste' | 'budget' | 'compare'
 
     const PROMPTS = {
-        taste: `당신은 TRYGO의 쇼핑 AI '에이션틱'입니다. 사용자의 취향·라이프스타일 기반 맞춤 추천을 해주세요.
-다음 형식으로 한국어로 답변하세요:
-🎯 취향 분석
-(사용자 취향을 2문장으로 분석)
+        taste: `You are Asiantic, TRYGO's shopping AI. Give personalized recommendations based on the user's taste and lifestyle.
+Respond in this format in English:
+🎯 Taste Analysis
+(Analyze the user's taste in 2 sentences)
 
-✨ 맞춤 추천 제품
-1. 제품명 — 추천 이유 1줄
-2. 제품명 — 추천 이유 1줄
-3. 제품명 — 추천 이유 1줄
+✨ Top Picks for You
+1. Product name — reason in 1 line
+2. Product name — reason in 1 line
+3. Product name — reason in 1 line
 
-💡 구매 팁
-(한 줄 조언)`,
-        budget: `당신은 TRYGO의 쇼핑 AI '에이션틱'입니다. 사용자의 예산에 맞는 최적 제품을 추천해주세요.
-다음 형식으로 한국어로 답변하세요:
-💰 예산 분석
-(예산 범위에서 얻을 수 있는 가치 2문장)
+💡 Shopping Tip
+(One-line advice)`,
+        budget: `You are Asiantic, TRYGO's shopping AI. Recommend the best products within the user's budget.
+Respond in this format in English:
+💰 Budget Analysis
+(2 sentences on what value the budget can get)
 
-🏆 가성비 TOP 3
-1. [예산 내 최선] 제품명 — 가격대와 장점 1줄
-2. [중간 선택] 제품명 — 가격대와 장점 1줄
-3. [프리미엄] 제품명 — 가격대와 장점 1줄
+🏆 Best Value TOP 3
+1. [Best Pick] Product name — price range and advantage
+2. [Mid-range] Product name — price range and advantage
+3. [Premium] Product name — price range and advantage
 
-⚠️ 주의사항
-(예산 설정 시 놓치기 쉬운 포인트 1줄)`,
-        compare: `당신은 TRYGO의 쇼핑 AI '에이션틱'입니다. 사용자가 비교하는 제품들을 명확하게 비교 분석해주세요.
-다음 형식으로 한국어로 답변하세요:
-⚖️ 핵심 비교 요약
-(한 줄로 결론)
+⚠️ Watch Out
+(One point people often miss when budgeting)`,
+        compare: `You are Asiantic, TRYGO's shopping AI. Clearly compare the products the user mentions.
+Respond in this format in English:
+⚖️ Summary
+(One-line conclusion)
 
-📊 상세 비교
-• 성능: (비교 내용)
-• 가격: (비교 내용)
-• 디자인: (비교 내용)
-• 실사용 만족도: (비교 내용)
+📊 Detailed Comparison
+• Performance: (comparison)
+• Price: (comparison)
+• Design: (comparison)
+• User Satisfaction: (comparison)
 
-🏅 에이션틱 최종 추천
-(누구에게 어떤 제품이 맞는지 2문장)`,
-        default: `당신은 TRYGO의 쇼핑 AI '에이션틱'입니다. 사용자의 쇼핑 질문에 핵심만 간결하게 한국어로 답하세요.
-다음 형식으로 답변하세요:
-[핵심 추천] 2~3문장 요약
-[추천 이유]
-1. 첫 번째 이유
-2. 두 번째 이유
-3. 세 번째 이유
-[가격 가이드] 적정 가격대 1줄`
+🏅 Asiantic's Final Pick
+(2 sentences on who each product suits best)`,
+        default: `You are Asiantic, TRYGO's shopping AI. Answer the user's shopping question concisely in English.
+Respond in this format:
+[Top Recommendation] 2-3 sentence summary
+[Why We Recommend It]
+1. First reason
+2. Second reason
+3. Third reason
+[Price Guide] One-line price range suggestion`
     };
 
     const callAI = async (q, type = '') => {
@@ -495,10 +497,10 @@ const App = () => {
                 })
             });
             const data = await res.json();
-            const text = data?.content?.[0]?.text || '분석 결과를 가져오지 못했습니다.';
+            const text = data?.content?.[0]?.text || 'Unable to load analysis results.';
             setAiText(text);
         } catch(err) {
-            setAiText('현재 AI 분석을 불러올 수 없습니다.\n잠시 후 다시 시도해 주세요.');
+            setAiText('Unable to load AI analysis.\nPlease try again later.');
         }
         setView('result');
     };
@@ -520,7 +522,7 @@ const App = () => {
                             <div className="logo-sub">Asiantic AI</div>
                         </div>
                     </div>
-                    <button className="btn-start" onClick={() => setShowModal(true)}>시작하기</button>
+                    <button className="btn-start" onClick={() => setShowModal(true)}>Get Started</button>
                 </div>
             </nav>
 
@@ -529,26 +531,26 @@ const App = () => {
                     <div className="fade-up">
                         <div className="hero">
                             <div className="hero-badge">✦ Asiantic AI Engine</div>
-                            <h1>쇼핑의 정답,<br/><span className="gradient-text">에이션틱 AI</span></h1>
-                            <p>실시간 데이터를 분석해 당신만을 위한<br/>최적의 구매 가이드를 제안합니다.</p>
+                            <h1>The Answer to Shopping,<br/><span className="gradient-text">Asiantic AI</span></h1>
+                            <p>Real-time data analysis for<br/>your perfect shopping guide.</p>
                             <div className="search-wrap">
                                 <span className="search-icon"><BrainSVG /></span>
-                                <input className="search-input" type="text" placeholder="무엇을 찾고 계세요?"
+                                <input className="search-input" type="text" placeholder="What are you looking for?"
                                     value={query} onChange={e => setQuery(e.target.value)}
                                     onKeyDown={e => e.key === 'Enter' && handleSearch()}
                                 />
-                                <button className="search-btn" onClick={handleSearch}>AI 분석</button>
-                                <button className="search-btn-mobile" onClick={handleSearch}>AI 분석 시작</button>
+                                <button className="search-btn" onClick={handleSearch}>Analyze</button>
+                                <button className="search-btn-mobile" onClick={handleSearch}>Start AI Analysis</button>
                             </div>
                             <div className="tags">
-                                <button className="tag tag-taste" onClick={() => { setQuery('내 취향을 바탕으로 제품을 추천해줘'); callAI('내 취향을 바탕으로 제품을 추천해줘', 'taste'); }}>
-                                    ✨ 내 취향에 맞는 제품 추천
+                                <button className="tag tag-taste" onClick={() => { setQuery('Recommend products based on my taste'); callAI('Recommend products based on my taste', 'taste'); }}>
+                                    ✨ Recommend by My Taste
                                 </button>
-                                <button className="tag tag-budget" onClick={() => { setQuery('예산 내에서 가장 좋은 제품을 찾아줘'); callAI('예산 내에서 가장 좋은 제품을 찾아줘', 'budget'); }}>
-                                    💰 예산에 맞는 최적 제품 찾기
+                                <button className="tag tag-budget" onClick={() => { setQuery('Find the best product within my budget'); callAI('Find the best product within my budget', 'budget'); }}>
+                                    💰 Find Best within Budget
                                 </button>
-                                <button className="tag tag-compare" onClick={() => { setQuery('두 제품을 비교해서 추천해줘'); callAI('두 제품을 비교해서 추천해줘', 'compare'); }}>
-                                    ⚖️ 제품 비교 분석
+                                <button className="tag tag-compare" onClick={() => { setQuery('Compare two products and recommend one'); callAI('Compare two products and recommend one', 'compare'); }}>
+                                    ⚖️ Compare Products
                                 </button>
                             </div>
                         </div>
@@ -561,10 +563,10 @@ const App = () => {
                             <div className="spin"><SpinSVG /></div>
                         </div>
                         <h2>
-                            {tagType === 'taste' && '취향을 분석하고 있어요...'}
-                            {tagType === 'budget' && '예산에 맞는 제품을 찾고 있어요...'}
-                            {tagType === 'compare' && '제품을 비교 분석하고 있어요...'}
-                            {(!tagType || tagType === '') && '에이션틱 AI가 분석 중입니다'}
+                            {tagType === 'taste' && 'Analyzing your taste...'}
+                            {tagType === 'budget' && 'Finding the best within your budget...'}
+                            {tagType === 'compare' && 'Comparing products for you...'}
+                            {(!tagType || tagType === '') && 'Asiantic AI is analyzing...'}
                         </h2>
                         <p className="pulse">
                             {tagType === 'taste' && 'Personalizing for you'}
@@ -578,7 +580,7 @@ const App = () => {
                 {view === 'result' && (
                     <div className="result-wrap fade-up">
                         <button className="back-btn" onClick={reset}>
-                            <ArrowSVG /> 다시 질문하기
+                            <ArrowSVG /> Ask Again
                         </button>
                         <div className="ai-card">
                             <div className="ai-card-header">
@@ -592,10 +594,10 @@ const App = () => {
                                 </div>
                                 <div>
                                     <div className="ai-card-title">
-                                        {tagType === 'taste' && '✨ 취향 맞춤 추천'}
-                                        {tagType === 'budget' && '💰 예산 최적화 분석'}
-                                        {tagType === 'compare' && '⚖️ 제품 비교 분석'}
-                                        {(!tagType || tagType === '') && '에이션틱 AI 분석'}
+                                        {tagType === 'taste' && '✨ Taste-Based Recommendation'}
+                                        {tagType === 'budget' && '💰 Budget Optimization'}
+                                        {tagType === 'compare' && '⚖️ Compare Products'}
+                                        {(!tagType || tagType === '') && 'Asiantic AI Analysis'}
                                     </div>
                                     <div className="ai-card-sub">"{query}"</div>
                                 </div>
@@ -603,7 +605,7 @@ const App = () => {
                             <div className="ai-answer">{aiText}</div>
                         </div>
                         <div className="product-section">
-                            <h3>✦ 에이션틱 AI 큐레이션</h3>
+                            <h3>✦ Asiantic AI Curation</h3>
                             {products.map(p => (
                                 <div className="product-card" key={p.id}>
                                     <img className="product-img" src={p.image} alt={p.name} />
@@ -621,9 +623,9 @@ const App = () => {
                             ))}
                         </div>
                         <div className="cta-box">
-                            <h3>에이션틱 AI와<br/>더 깊은 대화를 나누세요</h3>
-                            <p>취향과 라이프스타일을 분석해<br/>완벽한 쇼핑 가이드를 제공합니다.</p>
-                            <button className="cta-btn" onClick={() => setShowModal(true)}>✨ 얼리 액세스 신청</button>
+                            <h3>Go deeper with<br/>Asiantic AI</h3>
+                            <p>We analyze your lifestyle<br/>to find your perfect match.</p>
+                            <button className="cta-btn" onClick={() => setShowModal(true)}>✨ Join Early Access</button>
                         </div>
                     </div>
                 )}
@@ -638,7 +640,7 @@ const App = () => {
                         </svg>
                         <span style={{fontSize:18, fontWeight:700, color:'#4F46E5', letterSpacing:'-0.03em'}}>TRYGO</span>
                     </div>
-                    <p className="footer-copy">© 2025 TRYGO &amp; ASIANTIC AI. ALL RIGHTS RESERVED.</p>
+                    <p className="footer-copy">© 2025 TRYGO & ASIANTIC AI. ALL RIGHTS RESERVED.</p>
                     <div className="footer-links">
                         {['Privacy','Terms','Contact'].map(l => <a key={l} href="#">{l}</a>)}
                     </div>
