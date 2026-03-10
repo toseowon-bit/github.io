@@ -349,7 +349,7 @@ const products = [
 
 const WaitlistModal = ({ onClose }) => {
     const [email, setEmail] = useState('');
-    const [step, setStep] = useState('form');
+    const [step, setStep] = useState('form'); // form | saving | success
     const [error, setError] = useState('');
 
     const handleSubmit = async () => {
@@ -358,6 +358,7 @@ const WaitlistModal = ({ onClose }) => {
             return;
         }
         setError('');
+        setStep('saving');
         try {
             await fetch('https://script.google.com/macros/s/AKfycbwBZmcjMMkceuZvDuIKYrli1cTMGr8ZIwZZzgSj1736a5KNTrmIellLw8RW_yj7TNg/exec', {
                 method:'POST', mode:'no-cors',
@@ -372,7 +373,7 @@ const WaitlistModal = ({ onClose }) => {
         <div className="modal-bg" onClick={onClose}>
             <div className="modal-box" onClick={e => e.stopPropagation()}>
                 <button className="modal-close" onClick={onClose}>✕</button>
-                {step === 'form' ? (<>
+                {step === 'form' && (<>
                     <div className="modal-badge">✦ 서비스 출시 예정</div>
                     <h2>TRYGO가 곧<br/>출시됩니다 🚀</h2>
                     <p className="modal-desc">얼리 액세스를 신청하시면 <strong style={{color:'#4F46E5'}}>출시 즉시 특별 할인 코드</strong>를 보내드립니다.</p>
@@ -389,7 +390,23 @@ const WaitlistModal = ({ onClose }) => {
                     {error && <p className="email-error">{error}</p>}
                     <button className="submit-btn" onClick={handleSubmit}>✨ 할인 코드 받기</button>
                     <p className="modal-note">스팸 없음 · 언제든 수신 거부 가능</p>
-                </>) : (
+                </>)}
+
+                {step === 'saving' && (
+                    <div className="success-wrap" style={{padding:'40px 0'}}>
+                        <div style={{width:64,height:64,margin:'0 auto 24px',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                            <div className="spin">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" strokeWidth="2.2" strokeLinecap="round">
+                                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <h2 style={{fontSize:20,marginBottom:8}}>저장 중입니다...</h2>
+                        <p style={{color:'#94a3b8',fontSize:14}}>잠시만 기다려 주세요 🙏</p>
+                    </div>
+                )}
+
+                {step === 'success' && (
                     <div className="success-wrap">
                         <div className="success-icon">🎉</div>
                         <h2>등록 완료!</h2>
