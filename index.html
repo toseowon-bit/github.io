@@ -122,6 +122,9 @@
         cursor:pointer; transition:all 0.15s;
     }
     .tag:hover { border-color:#4F46E5; color:#4F46E5; }
+    .tag-taste:hover { border-color:#7C3AED; color:#7C3AED; }
+    .tag-budget:hover { border-color:#059669; color:#059669; }
+    .tag-compare:hover { border-color:#d97706; color:#d97706; }
 
     /* ── 로딩 ── */
     .loading-wrap {
@@ -426,9 +429,60 @@ const App = () => {
     const [query, setQuery] = useState('');
     const [aiText, setAiText] = useState('');
     const [showModal, setShowModal] = useState(false);
+    const [tagType, setTagType] = useState(''); // 'taste' | 'budget' | 'compare'
 
-    const callAI = async (q) => {
+    const PROMPTS = {
+        taste: `당신은 TRYGO의 쇼핑 AI '에이션틱'입니다. 사용자의 취향·라이프스타일 기반 맞춤 추천을 해주세요.
+다음 형식으로 한국어로 답변하세요:
+🎯 취향 분석
+(사용자 취향을 2문장으로 분석)
+
+✨ 맞춤 추천 제품
+1. 제품명 — 추천 이유 1줄
+2. 제품명 — 추천 이유 1줄
+3. 제품명 — 추천 이유 1줄
+
+💡 구매 팁
+(한 줄 조언)`,
+        budget: `당신은 TRYGO의 쇼핑 AI '에이션틱'입니다. 사용자의 예산에 맞는 최적 제품을 추천해주세요.
+다음 형식으로 한국어로 답변하세요:
+💰 예산 분석
+(예산 범위에서 얻을 수 있는 가치 2문장)
+
+🏆 가성비 TOP 3
+1. [예산 내 최선] 제품명 — 가격대와 장점 1줄
+2. [중간 선택] 제품명 — 가격대와 장점 1줄
+3. [프리미엄] 제품명 — 가격대와 장점 1줄
+
+⚠️ 주의사항
+(예산 설정 시 놓치기 쉬운 포인트 1줄)`,
+        compare: `당신은 TRYGO의 쇼핑 AI '에이션틱'입니다. 사용자가 비교하는 제품들을 명확하게 비교 분석해주세요.
+다음 형식으로 한국어로 답변하세요:
+⚖️ 핵심 비교 요약
+(한 줄로 결론)
+
+📊 상세 비교
+• 성능: (비교 내용)
+• 가격: (비교 내용)
+• 디자인: (비교 내용)
+• 실사용 만족도: (비교 내용)
+
+🏅 에이션틱 최종 추천
+(누구에게 어떤 제품이 맞는지 2문장)`,
+        default: `당신은 TRYGO의 쇼핑 AI '에이션틱'입니다. 사용자의 쇼핑 질문에 핵심만 간결하게 한국어로 답하세요.
+다음 형식으로 답변하세요:
+[핵심 추천] 2~3문장 요약
+[추천 이유]
+1. 첫 번째 이유
+2. 두 번째 이유
+3. 세 번째 이유
+[가격 가이드] 적정 가격대 1줄`
+    };
+
+    const callAI = async (q, type = '') => {
+        setTagType(type);
         setView('loading');
+        const systemPrompt = PROMPTS[type] || PROMPTS.default;
         try {
             const res = await fetch('https://api.anthropic.com/v1/messages', {
                 method:'POST',
@@ -436,14 +490,7 @@ const App = () => {
                 body: JSON.stringify({
                     model: 'claude-sonnet-4-20250514',
                     max_tokens: 1000,
-                    system: `당신은 TRYGO의 쇼핑 AI '에이션틱'입니다. 사용자의 쇼핑 질문에 핵심만 간결하게 한국어로 답하세요.
-다음 형식으로 답변하세요:
-[핵심 추천] 2~3문장 요약
-[추천 이유]
-1. 첫 번째 이유
-2. 두 번째 이유
-3. 세 번째 이유
-[가격 가이드] 적정 가격대 1줄`,
+                    system: systemPrompt,
                     messages:[{ role:'user', content: q }]
                 })
             });
@@ -456,9 +503,9 @@ const App = () => {
         setView('result');
     };
 
-    const handleSearch = () => { if (query.trim()) callAI(query); };
+    const handleSearch = () => { if (query.trim()) callAI(query, ''); };
 
-    const reset = () => { setView('home'); setQuery(''); setAiText(''); };
+    const reset = () => { setView('home'); setQuery(''); setAiText(''); setTagType(''); };
 
     return (
         <div style={{minHeight:'100vh', display:'flex', flexDirection:'column'}}>
@@ -494,9 +541,15 @@ const App = () => {
                                 <button className="search-btn-mobile" onClick={handleSearch}>AI 분석 시작</button>
                             </div>
                             <div className="tags">
-                                {["아이폰 16 자급제","로봇청소기 추천","에스프레소 머신","다이슨 에어랩"].map(tag => (
-                                    <button key={tag} className="tag" onClick={() => { setQuery(tag); callAI(tag); }}>{tag}</button>
-                                ))}
+                                <button className="tag tag-taste" onClick={() => { setQuery('내 취향을 바탕으로 제품을 추천해줘'); callAI('내 취향을 바탕으로 제품을 추천해줘', 'taste'); }}>
+                                    ✨ 내 취향에 맞는 제품 추천
+                                </button>
+                                <button className="tag tag-budget" onClick={() => { setQuery('예산 내에서 가장 좋은 제품을 찾아줘'); callAI('예산 내에서 가장 좋은 제품을 찾아줘', 'budget'); }}>
+                                    💰 예산에 맞는 최적 제품 찾기
+                                </button>
+                                <button className="tag tag-compare" onClick={() => { setQuery('두 제품을 비교해서 추천해줘'); callAI('두 제품을 비교해서 추천해줘', 'compare'); }}>
+                                    ⚖️ 제품 비교 분석
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -507,8 +560,18 @@ const App = () => {
                         <div className="loading-icon">
                             <div className="spin"><SpinSVG /></div>
                         </div>
-                        <h2>에이션틱 AI가 분석 중입니다</h2>
-                        <p className="pulse">Asiantic Reasoning Algorithm</p>
+                        <h2>
+                            {tagType === 'taste' && '취향을 분석하고 있어요...'}
+                            {tagType === 'budget' && '예산에 맞는 제품을 찾고 있어요...'}
+                            {tagType === 'compare' && '제품을 비교 분석하고 있어요...'}
+                            {(!tagType || tagType === '') && '에이션틱 AI가 분석 중입니다'}
+                        </h2>
+                        <p className="pulse">
+                            {tagType === 'taste' && 'Personalizing for you'}
+                            {tagType === 'budget' && 'Finding Best Value'}
+                            {tagType === 'compare' && 'Comparing Products'}
+                            {(!tagType || tagType === '') && 'Asiantic Reasoning Algorithm'}
+                        </p>
                     </div>
                 )}
 
@@ -519,9 +582,21 @@ const App = () => {
                         </button>
                         <div className="ai-card">
                             <div className="ai-card-header">
-                                <div className="ai-avatar"><BrainSVG size={20} color="white" /></div>
+                                <div className="ai-avatar" style={{
+                                    background: tagType === 'taste' ? 'linear-gradient(135deg,#7C3AED,#4F46E5)' :
+                                                tagType === 'budget' ? 'linear-gradient(135deg,#059669,#0891b2)' :
+                                                tagType === 'compare' ? 'linear-gradient(135deg,#d97706,#dc2626)' :
+                                                '#4F46E5'
+                                }}>
+                                    <BrainSVG size={20} color="white" />
+                                </div>
                                 <div>
-                                    <div className="ai-card-title">에이션틱 AI 분석</div>
+                                    <div className="ai-card-title">
+                                        {tagType === 'taste' && '✨ 취향 맞춤 추천'}
+                                        {tagType === 'budget' && '💰 예산 최적화 분석'}
+                                        {tagType === 'compare' && '⚖️ 제품 비교 분석'}
+                                        {(!tagType || tagType === '') && '에이션틱 AI 분석'}
+                                    </div>
                                     <div className="ai-card-sub">"{query}"</div>
                                 </div>
                             </div>
