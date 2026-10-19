@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>원어민 필수 영어 회화 200문장 학습 앱</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Pretendard Variable', 'Pretendard', 'Inter', 'Noto Sans KR', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fonts: Pretendard (Korean) & Inter -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Pretendard Variable', 'Pretendard', 'Inter', 'Noto Sans KR', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .font-en { font-family: 'Inter', 'Pretendard Variable', sans-serif; }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.04); }
+        ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.5); border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.6); }
+
+        /* Card entrance & reveal */
+        @keyframes cardIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+        .card-in { animation: cardIn .35s ease both; }
+        .answer-text { transition: filter .3s ease, opacity .3s ease; }
+        .answer-hidden { filter: blur(7px); opacity: .55; user-select: none; }
+
+        /* Speaking wave on the speaker button */
+        .wave { display: none; align-items: flex-end; gap: 2px; height: 14px; }
+        .wave span { width: 3px; border-radius: 2px; background: currentColor; animation: wave 0.9s ease-in-out infinite; }
+        .wave span:nth-child(2) { animation-delay: .15s; }
+        .wave span:nth-child(3) { animation-delay: .3s; }
+        @keyframes wave { 0%, 100% { height: 4px; } 50% { height: 14px; } }
+        .is-speaking .wave { display: flex; }
+        .is-speaking .speaker-icon { display: none; }
+        .is-speaking { box-shadow: 0 0 0 6px rgba(99, 102, 241, .18); }
+
+        /* Bottom sheet / modal */
+        @keyframes sheetUp { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .sheet-panel { animation: sheetUp .28s cubic-bezier(.2, .8, .2, 1) both; }
+        .sheet-overlay { animation: fadeIn .2s ease both; }
+
+        /* Range slider */
+        input[type=range] { -webkit-appearance: none; appearance: none; height: 6px; border-radius: 999px; background: #e2e8f0; outline: none; }
+        .dark input[type=range] { background: #334155; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 3px solid #6366f1; box-shadow: 0 2px 6px rgba(0,0,0,.15); cursor: pointer; }
+        input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid #6366f1; cursor: pointer; }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-full flex flex-col transition-colors duration-200">
+
+    <!-- Header Section -->
+    <header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/70 dark:border-slate-800">
+        <div class="max-w-5xl mx-auto px-4 py-3 sm:px-6 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 shrink-0 rounded-2xl bg-gradient-to-br from-brand-500 to-violet-500 text-white flex items-center justify-center shadow-lg shadow-brand-500/30">
+                    <i class="fa-solid fa-comments text-lg"></i>
+                </div>
+                <div class="min-w-0">
+                    <h1 class="text-base sm:text-lg font-extrabold tracking-tight truncate">원어민 필수 회화 200</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">왕초보 인출 학습 &amp; 3초 바로 말하기</p>
+                </div>
+            </div>
+
+            <!-- Action Controls Header -->
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <button id="open-voice-btn" class="h-10 px-3 rounded-xl bg-brand-50 text-brand-600 hover:bg-brand-100 dark:bg-brand-500/10 dark:text-brand-300 dark:hover:bg-brand-500/20 font-semibold text-sm transition flex items-center gap-2" aria-label="목소리 설정">
+                    <i class="fa-solid fa-microphone-lines"></i>
+                    <span class="hidden sm:inline">목소리</span>
+                </button>
+                <button id="toggle-all-btn" class="h-10 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 font-semibold text-sm transition flex items-center gap-2">
+                    <i id="toggle-all-icon" class="fa-regular fa-eye"></i>
+                    <span id="toggle-all-text" class="hidden sm:inline">전체 정답 보기</span>
+                </button>
+                <button id="theme-toggle" class="w-10 h-10 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-center" aria-label="Dark mode toggle">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-amber-400"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-100 dark:bg-slate-800 h-1">
+            <div id="progress-bar" class="bg-gradient-to-r from-brand-500 to-violet-500 h-1 transition-all duration-500 w-0"></div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-6 sm:px-6 space-y-5">
+
+        <!-- Hero / Progress Summary -->
+        <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 via-brand-500 to-violet-500 text-white p-5 sm:p-7 shadow-xl shadow-brand-500/20">
+            <div class="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-white/10"></div>
+            <div class="absolute right-16 -bottom-16 w-40 h-40 rounded-full bg-white/10"></div>
+            <div class="relative flex items-center justify-between gap-4">
+                <div class="min-w-0">
+                    <p class="text-white/80 text-xs sm:text-sm font-medium mb-1">학습 달성률</p>
+                    <p class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                        <span id="progress-count">0</span><span class="text-white/70 text-lg sm:text-xl font-semibold"> / 200 문장</span>
+                    </p>
+                    <p class="text-white/80 text-xs sm:text-sm mt-2">한국어를 보고 3초 안에 영어로 말해보세요.</p>
+                    <button id="voice-chip" class="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur text-xs sm:text-sm font-medium transition max-w-full">
+                        <i class="fa-solid fa-volume-high"></i>
+                        <span id="voice-chip-text" class="truncate">목소리 불러오는 중…</span>
+                        <i class="fa-solid fa-chevron-right text-[10px] opacity-70"></i>
+                    </button>
+                </div>
+                <div class="relative w-24 h-24 sm:w-28 sm:h-28 shrink-0">
+                    <svg viewBox="0 0 64 64" class="w-full h-full -rotate-90">
+                        <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="6"/>
+                        <circle id="progress-ring" cx="32" cy="32" r="26" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"
+                                stroke-dasharray="163.36" stroke-dashoffset="163.36" style="transition: stroke-dashoffset .6s ease"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span id="progress-text" class="text-lg sm:text-xl font-extrabold">0%</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Controls & Filters Section -->
+        <section class="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200/70 dark:border-slate-800 space-y-4">
+            <!-- Search input -->
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" id="search-input" placeholder="번호, 한국어, 영어로 검색" class="w-full pl-11 pr-10 py-3 text-sm bg-slate-50 dark:bg-slate-800/60 border border-transparent focus:border-brand-300 dark:focus:border-brand-500/50 rounded-2xl focus:outline-none focus:ring-4 focus:ring-brand-500/10 transition">
+                <button id="clear-search-btn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 dark:hover:text-slate-200 text-xs" aria-label="검색어 지우기">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Range chips -->
+            <div>
+                <p class="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">범위</p>
+                <div id="range-chips" class="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1"></div>
+            </div>
+
+            <!-- Status chips + shuffle/reset -->
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">상태</p>
+                    <div id="status-chips" class="flex gap-2"></div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="shuffle-btn" class="h-9 px-3 text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2">
+                        <i class="fa-solid fa-shuffle"></i>
+                        <span id="shuffle-text">무작위 섞기</span>
+                    </button>
+                    <button id="reset-progress-btn" class="h-9 px-3 text-sm font-semibold rounded-xl text-rose-500 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10 transition flex items-center gap-2" title="학습 기록 초기화">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span class="hidden sm:inline">초기화</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <p class="text-xs text-slate-400 dark:text-slate-500 px-1">
+            <i class="fa-regular fa-hand-pointer mr-1"></i> 카드를 탭하면 영어 정답이 나오고, <i class="fa-solid fa-volume-high mx-0.5"></i> 버튼을 누르면 읽어줘요.
+        </p>
+
+        <!-- Sentence Cards List Container -->
+        <section id="cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Cards populated dynamically via JavaScript -->
+        </section>
+
+        <!-- Empty state message -->
+        <div id="empty-state" class="hidden text-center py-16">
+            <div class="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-600 flex items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-900">
+                <i class="fa-solid fa-magnifying-glass text-2xl"></i>
+            </div>
+            <p class="text-slate-500 dark:text-slate-400 font-medium">조건에 맞는 문장이 없어요.</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-8 py-6 border-t border-slate-200/70 dark:border-slate-800 text-center text-xs text-slate-400 dark:text-slate-500">
+        <p>원어민 필수 영어 회화 200문장</p>
+    </footer>
+
+    <!-- Voice Settings Sheet -->
+    <div id="voice-sheet" class="hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="voice-sheet-title">
+        <div id="voice-overlay" class="sheet-overlay absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+        <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none">
+            <div class="sheet-panel pointer-events-auto w-full sm:max-w-lg max-h-[88vh] flex flex-col bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200/70 dark:border-slate-800">
+                <!-- Sheet header -->
+                <div class="px-5 pt-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <div class="w-10 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 mx-auto mb-3 sm:hidden"></div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 id="voice-sheet-title" class="text-lg font-extrabold tracking-tight">읽어주는 목소리</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">억양과 목소리, 속도를 골라보세요.</p>
+                        </div>
+                        <button id="close-voice-btn" class="w-9 h-9 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500" aria-label="닫기">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sheet body -->
+                <div class="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+                    <!-- Accent filter -->
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">억양</p>
+                        <div id="accent-chips" class="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1"></div>
+                    </div>
+
+                    <!-- Voice list -->
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">목소리</p>
+                        <div id="voice-list" class="space-y-2"></div>
+                    </div>
+
+                    <!-- Speed -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-slate-400 dark:text-slate-500">말하기 속도</p>
+                            <span id="rate-value" class="text-sm font-bold text-brand-600 dark:text-brand-300">0.9x</span>
+                        </div>
+                        <input id="rate-input" type="range" min="0.5" max="1.5" step="0.05" value="0.9" class="w-full">
+                        <div class="flex justify-between text-[11px] text-slate-400 mt-1"><span>느리게</span><span>보통</span><span>빠르게</span></div>
+                    </div>
+
+                    <!-- Pitch -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-semibold text-slate-400 dark:text-slate-500">목소리 높낮이</p>
+                            <span id="pitch-value" class="text-sm font-bold text-brand-600 dark:text-brand-300">1.0</span>
+                        </div>
+                        <input id="pitch-input" type="range" min="0.5" max="1.5" step="0.05" value="1" class="w-full">
+                        <div class="flex justify-between text-[11px] text-slate-400 mt-1"><span>낮게</span><span>보통</span><span>높게</span></div>
+                    </div>
+
+                    <div class="rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-3.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                        <p class="font-semibold text-slate-600 dark:text-slate-300 mb-1"><i class="fa-solid fa-circle-info mr-1"></i> 목소리가 마음에 안 드나요?</p>
+                        목소리 목록은 기기와 브라우저마다 달라요. <b>추천</b> 표시가 있는 목소리가 더 자연스러워요.<br>
+                        · 아이폰/아이패드: 설정 → 손쉬운 사용 → 읽기 및 말하기 → 음성 → 영어에서 <b>고품질(향상된)</b> 음성을 내려받을 수 있어요.<br>
+                        · PC: Microsoft Edge 브라우저에서는 매우 자연스러운 <b>Natural</b> 음성을 쓸 수 있어요.
+                    </div>
+                </div>
+
+                <!-- Sheet footer -->
+                <div class="px-5 py-4 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+                    <button id="reset-voice-btn" class="h-12 px-4 rounded-2xl text-sm font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">기본값</button>
+                    <button id="preview-voice-btn" class="flex-1 h-12 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-brand-600/25">
+                        <i class="fa-solid fa-play"></i> 미리 듣기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Logic Script -->
+    <script>
+        // 200 Sentences Database
+        const rawData = [
+            { id: 1, kr: "내가 무슨 말을 하고 있었지?", en: "Where was I?" },
+            { id: 2, kr: "나 집 거의 다 왔어.", en: "I'm almost home." },
+            { id: 3, kr: "괜찮아요 / 좋아요.", en: "That works for me." },
+            { id: 4, kr: "시간이 더 있을 줄 알았어요.", en: "I thought I had more time." },
+            { id: 5, kr: "나 좀 도와줄 수 있어?", en: "Can you give me a hand?" },
+            { id: 6, kr: "시간 가는 줄 몰랐어요.", en: "I lost track of time." },
+            { id: 7, kr: "준비 다 됐어요 / 괜찮아요.", en: "I'm all set." },
+            { id: 8, kr: "급한 일이 생겼어요.", en: "Something came up." },
+            { id: 9, kr: "무슨 말씀인지 잘 이해가 안 돼요.", en: "You lost me there." },
+            { id: 10, kr: "일단은 이걸로 됐어요.", en: "That's enough for now." },
+            { id: 11, kr: "우리 무슨 이야기 하고 있었죠?", en: "What were we talking about?" },
+            { id: 12, kr: "곧 처리할게요.", en: "I'll get to it soon." },
+            { id: 13, kr: "다음 기회에 해요.", en: "Maybe some other time." },
+            { id: 14, kr: "내가 이 부분 할 수 있어.", en: "I can do this part." },
+            { id: 15, kr: "이제야 말이 되네요 / 이해가 되네요.", en: "That makes more sense." },
+            { id: 16, kr: "쉬었으면 좋겠어요.", en: "I could use a break." },
+            { id: 17, kr: "이번엔 사양할게요.", en: "I think I'll pass." },
+            { id: 18, kr: "아까까진 여기 있었는데.", en: "It was here a second ago." },
+            { id: 19, kr: "내가 무슨 말 하려고 했지?", en: "What was I saying?" },
+            { id: 20, kr: "내일 알려드릴게요.", en: "I'll let you know tomorrow." },
+            { id: 21, kr: "이걸 어떻게 말해야 할지 모르겠네요.", en: "I don't know how to say this." },
+            { id: 22, kr: "나중에 들를게요.", en: "I'll come by later." },
+            { id: 23, kr: "결정을 못 내리겠어요.", en: "I can't make up my mind." },
+            { id: 24, kr: "다시 보내주실 수 있나요?", en: "Could you send it again?" },
+            { id: 25, kr: "잊어버리기 전에 말인데요.", en: "Before I forget." },
+            { id: 26, kr: "쉬는 시간이 필요해요.", en: "I need a break." },
+            { id: 27, kr: "나중에 결정해요.", en: "We can decide later." },
+            { id: 28, kr: "이것 좀 확인해주실 수 있나요?", en: "Could you check this for me?" },
+            { id: 29, kr: "내가 말했던 것 같은데.", en: "I thought I told you." },
+            { id: 30, kr: "금방 돌아올게요.", en: "I'll be right back." },
+            { id: 31, kr: "내 말 뜻은 그게 전부야.", en: "That's all I'm saying." },
+            { id: 32, kr: "아직 답장을 못 받았어요.", en: "I haven't heard back yet." },
+            { id: 33, kr: "그러고 싶은데 안 되겠어요.", en: "I'd love to but I can't." },
+            { id: 34, kr: "옆으로 조금만 비켜주실 수 있나요?", en: "Can you move over a little?" },
+            { id: 35, kr: "물어봐도 될지 확신이 안 섰어요.", en: "I wasn't sure if I should ask." },
+            { id: 36, kr: "오늘은 이만 마칩시다.", en: "Let's call it a day." },
+            { id: 37, kr: "당신 의견대로 할게요.", en: "I'll go with your idea." },
+            { id: 38, kr: "손이 안 닿아요.", en: "I can't reach it." },
+            { id: 39, kr: "제가 틀렸을 수도 있어요.", en: "I might be wrong." },
+            { id: 40, kr: "오늘 할 일이 많아요.", en: "I have a lot to do today." },
+            { id: 41, kr: "방금 떠올랐어요.", en: "It just came to me." },
+            { id: 42, kr: "나머지는 내일 할게요.", en: "I'll do the rest tomorrow." },
+            { id: 43, kr: "시간 될 때 알려주세요.", en: "Let me know when you're free." },
+            { id: 44, kr: "어디 뒀는지 기억이 안 나요.", en: "I can't remember where I put it." },
+            { id: 45, kr: "제 뜻은 그게 아니었어요.", en: "That's not what I meant." },
+            { id: 46, kr: "금방 갈게요.", en: "I'll be there in a minute." },
+            { id: 47, kr: "한번 시도해 보죠.", en: "Let's give it a try." },
+            { id: 48, kr: "저도 그 생각 하고 있었어요.", en: "That's what I was thinking." },
+            { id: 49, kr: "그게 거의 다예요.", en: "That's pretty much it." },
+            { id: 50, kr: "금방 끝낼게요.", en: "I'll make it quick." },
+            { id: 51, kr: "무슨 말씀이신지 알겠어요.", en: "I see what you mean." },
+            { id: 52, kr: "생각보다 오래 걸리네요.", en: "This is taking longer than I thought." },
+            { id: 53, kr: "둘 중 어느 것이든 좋아요.", en: "Either one is fine." },
+            { id: 54, kr: "어떻게 하는지 보여줄 수 있어?", en: "Can you show me how?" },
+            { id: 55, kr: "그렇게는 생각 못 해봤네요.", en: "I never thought of it that way." },
+            { id: 56, kr: "오늘은 집에 있을 거예요.", en: "I'm staying in today." },
+            { id: 57, kr: "잠깐 시간 있으신가요?", en: "Do you have a minute?" },
+            { id: 58, kr: "거기 둬.", en: "Put it over there." },
+            { id: 59, kr: "그냥 그렇다는 거지.", en: "I'm just saying." },
+            { id: 60, kr: "잠깐 외출했어요.", en: "I just stepped out." },
+            { id: 61, kr: "내가 아는 걸 말해줄게.", en: "I'll tell you what I know." },
+            { id: 62, kr: "생각보다 오래 걸렸어요.", en: "It took longer than I thought." },
+            { id: 63, kr: "1시간만 뒤로 미룰 수 있을까요?", en: "Can we push it back an hour?" },
+            { id: 64, kr: "이것 좀 잠깐 들어줄 수 있어?", en: "Can you hold this for a second?" },
+            { id: 65, kr: "선수 쳤네 / 나보다 먼저 했네.", en: "You beat me to it." },
+            { id: 66, kr: "일 때문에 바빴어요.", en: "Work kept me busy." },
+            { id: 67, kr: "그거 다시 하자.", en: "Let's do that again." },
+            { id: 68, kr: "시간 내주셔서 감사합니다.", en: "Thanks for taking the time." },
+            { id: 69, kr: "왜 그렇게 생각하시는지 알겠어요.", en: "I can see why you'd think that." },
+            { id: 70, kr: "조금 늦고 있어요.", en: "I'm running a little late." },
+            { id: 71, kr: "아 맞다, 생각났다 / 생각해보니.", en: "That reminds me." },
+            { id: 72, kr: "내일 일찍 일어나야 해요.", en: "I have an early day tomorrow." },
+            { id: 73, kr: "둘 중 뭐든 괜찮아요.", en: "I'm good with either one." },
+            { id: 74, kr: "그냥 거기 둬요.", en: "Just leave it there." },
+            { id: 75, kr: "막 그 얘기 하려던 참이었어요.", en: "I was just getting to that." },
+            { id: 76, kr: "막 나가려던 참이었어요.", en: "I was just about to leave." },
+            { id: 77, kr: "시간 아주 넉넉해요.", en: "We have plenty of time." },
+            { id: 78, kr: "받아 적어주실 수 있나요?", en: "Can you write it down for me?" },
+            { id: 79, kr: "일리가 있네요.", en: "You have a point." },
+            { id: 80, kr: "마무리할 일이 몇 개 있어요.", en: "I have a few things to finish." },
+            { id: 81, kr: "나도 같은 말 하려고 했는데.", en: "I was going to say the same thing." },
+            { id: 82, kr: "오늘 끝낼게요.", en: "I'll get it done today." },
+            { id: 83, kr: "조금 더 일찍 만날 수 있을까요?", en: "Can we make it a little earlier?" },
+            { id: 84, kr: "그러면 되겠네요 / 이 정도면 됐어.", en: "That should do it." },
+            { id: 85, kr: "다시 시도해 볼게요.", en: "Let me try that again." },
+            { id: 86, kr: "거의 다 끝났어요.", en: "I'm almost done with this." },
+            { id: 87, kr: "지금 시간 괜찮으세요?", en: "Is now a good time?" },
+            { id: 88, kr: "부탁 하나만 들어줄 수 있어?", en: "Can you do me a favor?" },
+            { id: 89, kr: "표현이 좋네요 / 말을 참 잘하시네요.", en: "That's a good way to put it." },
+            { id: 90, kr: "아직 준비 안 됐어요.", en: "I'm not ready yet." },
+            { id: 91, kr: "그건 예상 못 했네요.", en: "I didn't see that coming." },
+            { id: 92, kr: "이미 선약이 있어요.", en: "I already have plans." },
+            { id: 93, kr: "시간이 거의 다 됐어요.", en: "We're almost out of time." },
+            { id: 94, kr: "한 번만 다시 말씀해 주시겠어요?", en: "Could you say that one more time?" },
+            { id: 95, kr: "그게 다인 것 같아요.", en: "I think that's everything." },
+            { id: 96, kr: "금방 준비될 거예요.", en: "I'll be ready in a minute." },
+            { id: 97, kr: "결정되면 알려주세요.", en: "Let me know what you decide." },
+            { id: 98, kr: "내가 받을게 / 내가 할게.", en: "I'll get it." },
+            { id: 99, kr: "너한테 말하려고 했어.", en: "I meant to tell you." },
+            { id: 100, kr: "나 오늘 밤에 시간 돼.", en: "I'm free tonight." },
+            { id: 101, kr: "내가 해볼게.", en: "Let me try." },
+            { id: 102, kr: "완벽할 필요는 없어.", en: "It doesn't have to be perfect." },
+            { id: 103, kr: "나 지금 출발해.", en: "I'm heading out now." },
+            { id: 104, kr: "우리 어디까지 얘기했지?", en: "Where were we?" },
+            { id: 105, kr: "이건 어디다 둘까요?", en: "Where should I put this?" },
+            { id: 106, kr: "일정 확인해 볼게요.", en: "I'll check my schedule." },
+            { id: 107, kr: "당신 준비되면 나도 준비돼요.", en: "I'm ready when you are." },
+            { id: 108, kr: "이제 이해가 되네요.", en: "Now I get it." },
+            { id: 109, kr: "여기서부터는 내가 할게요.", en: "I'll take it from here." },
+            { id: 110, kr: "지금 시간 정해요.", en: "Let's set a time now." },
+            { id: 111, kr: "내가 해줄게요.", en: "Let me do that for you." },
+            { id: 112, kr: "진짜 빠르네.", en: "That was fast." },
+            { id: 113, kr: "근처에 일이 있어서 왔어요.", en: "I was in the area." },
+            { id: 114, kr: "제가 맞게 이해했나요?", en: "Did I get that right?" },
+            { id: 115, kr: "다 된 것 같아요 / 괜찮은 것 같아요.", en: "I think we're good." },
+            { id: 116, kr: "갈 수 있는지 볼게요.", en: "I'll see if I can make it." },
+            { id: 117, kr: "가면서 생각해보죠 / 하면서 알아볼게요.", en: "I'll figure it out as I go." },
+            { id: 118, kr: "그건 예상 못 했어요.", en: "I didn't expect that." },
+            { id: 119, kr: "제가 한번 볼게요.", en: "Let me take a look." },
+            { id: 120, kr: "하룻밤 더 생각해 볼게요.", en: "I'll sleep on it." },
+            { id: 121, kr: "집에 두고 왔어요.", en: "I left it at home." },
+            { id: 122, kr: "아직 못 정했어요.", en: "I haven't decided yet." },
+            { id: 123, kr: "하루 쉬어야겠어요.", en: "I need a day off." },
+            { id: 124, kr: "내가 뭘 놓치고 있지?", en: "What am I missing?" },
+            { id: 125, kr: "나만 믿어요.", en: "You can count on me." },
+            { id: 126, kr: "별다른 선호는 없어요 / 상관없어요.", en: "I don't have a preference." },
+            { id: 127, kr: "힘든 하루였어요.", en: "It's been a long day." },
+            { id: 128, kr: "무슨 말씀이신지 잘 못 따라가겠어요.", en: "I'm not following you." },
+            { id: 129, kr: "지금은 괜찮아요.", en: "I'm good for now." },
+            { id: 130, kr: "다른 날 하면 안 될까요?", en: "Can we do it another day?" },
+            { id: 131, kr: "그건 제가 도와드릴 수 있어요.", en: "I can help with that." },
+            { id: 132, kr: "당신 결정에 맡길게요.", en: "I'll leave it up to you." },
+            { id: 133, kr: "내일 아침 제일 먼저 할게요.", en: "I'll do it first thing tomorrow." },
+            { id: 134, kr: "말이 나와서 말인데.", en: "Speaking of that." },
+            { id: 135, kr: "치워둘게요 / 정돈할게요.", en: "I'll put it away." },
+            { id: 136, kr: "편하신 대로 하세요.", en: "Whatever works for you." },
+            { id: 137, kr: "내일 처리할게요.", en: "I'll take care of it tomorrow." },
+            { id: 138, kr: "들어본 적 있어요.", en: "I've heard of it." },
+            { id: 139, kr: "이제 잘 될 거예요.", en: "It should work now." },
+            { id: 140, kr: "해볼 만한 가치가 있는 것 같아요.", en: "I think it's worth a try." },
+            { id: 141, kr: "그렇게까지 안 하셔도 돼요.", en: "You don't have to do that." },
+            { id: 142, kr: "6시 이후면 가능해요.", en: "I can make it after 6." },
+            { id: 143, kr: "방금 돌아왔어요.", en: "I just got back." },
+            { id: 144, kr: "그건 나중에 다시 얘기해요.", en: "I'll get back to that." },
+            { id: 145, kr: "문 좀 열어두실 수 있나요?", en: "Could you leave the door open?" },
+            { id: 146, kr: "알려드릴게요.", en: "I'll let you know." },
+            { id: 147, kr: "저 지금 뭐 좀 하는 중이에요.", en: "I'm in the middle of something." },
+            { id: 148, kr: "오해는 하지 말고 들으세요.", en: "Don't get me wrong." },
+            { id: 149, kr: "내가 직접 할게요.", en: "I'll do it myself." },
+            { id: 150, kr: "간단하게 합시다.", en: "Let's keep it simple." },
+            { id: 151, kr: "차에 두고 내린 게 틀림없어요.", en: "I must have left it in the car." },
+            { id: 152, kr: "전 이쪽으로 기울고 있어요 / 이게 더 마음이 가요.", en: "I'm leaning toward this one." },
+            { id: 153, kr: "몇 초밖에 안 걸려요.", en: "It'll only take a second." },
+            { id: 154, kr: "이렇게 설명해 볼게요.", en: "Let me put it this way." },
+            { id: 155, kr: "큰 도움이 되었어요.", en: "That helps a lot." },
+            { id: 156, kr: "마음이 자꾸 바뀌네요.", en: "I keep changing my mind." },
+            { id: 157, kr: "아직 작업 중이에요.", en: "I'm still working on it." },
+            { id: 158, kr: "깜빡할 뻔했네요.", en: "I almost forgot." },
+            { id: 159, kr: "하나만 더 물어봐도 될까요?", en: "Can I ask one more thing?" },
+            { id: 160, kr: "그럴 만한 가치가 없는 것 같아요.", en: "I don't think it's worth it." },
+            { id: 161, kr: "그것 좀 건네주실 수 있나요?", en: "Can you pass me that?" },
+            { id: 162, kr: "이걸로 합시다.", en: "Let's go with this one." },
+            { id: 163, kr: "방금 집에 도착했어요.", en: "I just got home." },
+            { id: 164, kr: "너한테 할 말이 있었어.", en: "I wanted to tell you something." },
+            { id: 165, kr: "제가 고칠 수 있을 것 같아요.", en: "I think I can fix it." },
+            { id: 166, kr: "생각 좀 해볼게요.", en: "Let me think about it." },
+            { id: 167, kr: "시간이 조금 더 필요해요.", en: "I need a little more time." },
+            { id: 168, kr: "무슨 얘기 하고 있었는지 잊어버렸어요.", en: "I lost my train of thought." },
+            { id: 169, kr: "나중에 찾아볼게요.", en: "I'll look for it later." },
+            { id: 170, kr: "오늘은 그럴 기분이 아니에요.", en: "I'm not up for it today." },
+            { id: 171, kr: "소리 좀 줄여주실 수 있나요?", en: "Can you turn it down a little?" },
+            { id: 172, kr: "내일 이어서 해요.", en: "Let's pick this up tomorrow." },
+            { id: 173, kr: "아직 못 받았습니다.", en: "I haven't gotten it yet." },
+            { id: 174, kr: "말하려던 의도가 아니었어요 / 말이 잘못 나왔네요.", en: "That came out wrong." },
+            { id: 175, kr: "귀찮게 하고 싶지 않아요.", en: "I don't want to bother you." },
+            { id: 176, kr: "날짜를 잘못 알았어요.", en: "I got the date wrong." },
+            { id: 177, kr: "어제 잠을 많이 못 잤어요.", en: "I didn't sleep much last night." },
+            { id: 178, kr: "그것에 대해 들은 적이 있어요.", en: "I heard something about that." },
+            { id: 179, kr: "꺼내 드릴게요.", en: "I'll get it out for you." },
+            { id: 180, kr: "시간 내서 해볼게요.", en: "I'll make time for it." },
+            { id: 181, kr: "필요한 것 있으시면 말씀해 주세요.", en: "Let me know if you need anything." },
+            { id: 182, kr: "그때쯤 되면 더 알게 될 거예요.", en: "I'll know more by then." },
+            { id: 183, kr: "늦잠 잤어요.", en: "I overslept." },
+            { id: 184, kr: "이미 알고 계신 줄 알았어요.", en: "I thought you already knew." },
+            { id: 185, kr: "다음엔 뭘 해야 하나요?", en: "What do I do next?" },
+            { id: 186, kr: "몇 시가 괜찮으세요?", en: "What time works for you?" },
+            { id: 187, kr: "잠을 좀 자야겠어요.", en: "I should get some sleep." },
+            { id: 188, kr: "제가 뭐 놓친 거 있나요?", en: "Did I miss something?" },
+            { id: 189, kr: "알아들었어요 / 알겠어요.", en: "I've got it." },
+            { id: 190, kr: "계획이 변경되었어요.", en: "My plans changed." },
+            { id: 191, kr: "이것 좀 봐주실 수 있나요?", en: "Could you take a look at this?" },
+            { id: 192, kr: "내일인 줄 알았어요.", en: "I thought it was tomorrow." },
+            { id: 193, kr: "오늘 업무 끝났어요.", en: "I'm done for the day." },
+            { id: 194, kr: "거기에 대해 잘 몰라요.", en: "I don't know much about it." },
+            { id: 195, kr: "바로 당신 눈앞에 있어요.", en: "It's right in front of you." },
+            { id: 196, kr: "일정을 조율해야 해요.", en: "I need to move things around." },
+            { id: 197, kr: "아무 계획 없어요.", en: "I don't have anything planned." },
+            { id: 198, kr: "그런 뜻으로 말한 게 아니었어요.", en: "I didn't mean it like that." },
+            { id: 199, kr: "제가 처리할게요.", en: "I'll take care of that." },
+            { id: 200, kr: "서두를 필요 없어요 / 천천히 하세요.", en: "There's no rush." }
+        ];
+
+        // State variables
+        let items = [...rawData];
+        let learnedState = JSON.parse(localStorage.getItem('english_200_learned') || '{}');
+        let revealedCards = {}; // Track individual revealed states
+        let globalRevealAll = false;
+        let isShuffled = false;
+        let currentRange = 'all';
+        let currentStatus = 'all';
+
+        const RANGES = [
+            { value: 'all', label: '전체' },
+            { value: '1-50', label: '1 – 50' },
+            { value: '51-100', label: '51 – 100' },
+            { value: '101-150', label: '101 – 150' },
+            { value: '151-200', label: '151 – 200' },
+        ];
+        const STATUSES = [
+            { value: 'all', label: '모두' },
+            { value: 'unlearned', label: '미암기' },
+            { value: 'learned', label: '암기 완료' },
+        ];
+
+        // DOM elements
+        const cardsContainer = document.getElementById('cards-container');
+        const emptyState = document.getElementById('empty-state');
+        const searchInput = document.getElementById('search-input');
+        const clearSearchBtn = document.getElementById('clear-search-btn');
+        const rangeChips = document.getElementById('range-chips');
+        const statusChips = document.getElementById('status-chips');
+        const toggleAllBtn = document.getElementById('toggle-all-btn');
+        const toggleAllText = document.getElementById('toggle-all-text');
+        const toggleAllIcon = document.getElementById('toggle-all-icon');
+        const shuffleBtn = document.getElementById('shuffle-btn');
+        const shuffleText = document.getElementById('shuffle-text');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const progressCount = document.getElementById('progress-count');
+        const progressRing = document.getElementById('progress-ring');
+        const resetProgressBtn = document.getElementById('reset-progress-btn');
+        const themeToggle = document.getElementById('theme-toggle');
+
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        // Dark Mode Initialization
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        // ── Voice (TTS) ─────────────────────────────────────────────
+        const VOICE_KEY = 'english_200_voice';
+        const DEFAULT_VOICE_SETTINGS = { voiceURI: null, rate: 0.9, pitch: 1 };
+        const ACCENTS = {
+            US: '미국', GB: '영국', AU: '호주', CA: '캐나다', IE: '아일랜드',
+            NZ: '뉴질랜드', IN: '인도', ZA: '남아공', SG: '싱가포르', PH: '필리핀',
+        };
+        const PREVIEW_TEXT = "Hi there! Let's practice English together.";
+
+        let voiceSettings = { ...DEFAULT_VOICE_SETTINGS };
+        try {
+            voiceSettings = { ...DEFAULT_VOICE_SETTINGS, ...JSON.parse(localStorage.getItem(VOICE_KEY) || '{}') };
+        } catch (e) { /* keep defaults */ }
+
+        let englishVoices = [];
+        let accentFilter = 'all';
+        let speakingId = null;
+
+        function saveVoiceSettings() {
+            localStorage.setItem(VOICE_KEY, JSON.stringify(voiceSettings));
+        }
+
+        function voiceRegion(voice) {
+            const parts = voice.lang.replace('_', '-').split('-');
+            return (parts[1] || '').toUpperCase();
+        }
+
+        function accentLabel(voice) {
+            const region = voiceRegion(voice);
+            return ACCENTS[region] || (region ? `영어 (${region})` : '영어');
+        }
+
+        // Higher score = more natural-sounding voice
+        function voiceScore(voice) {
+            let score = 0;
+            if (/natural|neural|premium|enhanced|향상/i.test(voice.name)) score += 3;
+            if (/google|online|siri/i.test(voice.name)) score += 2;
+            if (voiceRegion(voice) === 'US') score += 0.5;
+            return score;
+        }
+
+        function isRecommended(voice) {
+            return voiceScore(voice) >= 2;
+        }
+
+        function loadVoices() {
+            if (!('speechSynthesis' in window)) return;
+            const seen = new Set();
+            englishVoices = window.speechSynthesis.getVoices()
+                .filter(v => v.lang && v.lang.toLowerCase().startsWith('en'))
+                .filter(v => !seen.has(v.voiceURI) && seen.add(v.voiceURI))
+                .sort((a, b) => voiceScore(b) - voiceScore(a) || a.name.localeCompare(b.name));
+            renderAccentChips();
+            renderVoiceList();
+            updateVoiceChip();
+        }
+
+        function currentVoice() {
+            return englishVoices.find(v => v.voiceURI === voiceSettings.voiceURI)
+                || englishVoices.find(v => voiceRegion(v) === 'US')
+                || englishVoices[0]
+                || null;
+        }
+
+        function setSpeakingButton(id, on) {
+            if (id == null) return;
+            document.querySelectorAll(`[data-speak="${id}"]`).forEach(btn => btn.classList.toggle('is-speaking', on));
+        }
+
+        function speakEnglish(text, id = null, voiceOverride = null) {
+            if (!('speechSynthesis' in window)) {
+                alert('이 브라우저는 음성 합성을 지원하지 않습니다.');
+                return;
+            }
+            window.speechSynthesis.cancel(); // Stop current speech
+            setSpeakingButton(speakingId, false);
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            const voice = voiceOverride || currentVoice();
+            if (voice) {
+                utterance.voice = voice;
+                utterance.lang = voice.lang;
+            } else {
+                utterance.lang = 'en-US';
+            }
+            utterance.rate = voiceSettings.rate;
+            utterance.pitch = voiceSettings.pitch;
+
+            speakingId = id;
+            setSpeakingButton(id, true);
+            const done = () => {
+                setSpeakingButton(id, false);
+                if (speakingId === id) speakingId = null;
+            };
+            utterance.onend = done;
+            utterance.onerror = done;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Voice settings sheet
+        const voiceSheet = document.getElementById('voice-sheet');
+        const accentChips = document.getElementById('accent-chips');
+        const voiceList = document.getElementById('voice-list');
+        const rateInput = document.getElementById('rate-input');
+        const rateValue = document.getElementById('rate-value');
+        const pitchInput = document.getElementById('pitch-input');
+        const pitchValue = document.getElementById('pitch-value');
+        const voiceChipText = document.getElementById('voice-chip-text');
+
+        function chipClass(active) {
+            return `shrink-0 h-9 px-3.5 rounded-full text-sm font-semibold transition whitespace-nowrap ${active
+                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'}`;
+        }
+
+        function renderAccentChips() {
+            const regions = [...new Set(englishVoices.map(voiceRegion))]
+                .sort((a, b) => (a === 'US' ? -1 : b === 'US' ? 1 : a === 'GB' ? -1 : b === 'GB' ? 1 : a.localeCompare(b)));
+            if (accentFilter !== 'all' && !regions.includes(accentFilter)) accentFilter = 'all';
+            const chips = [{ value: 'all', label: '전체' }, ...regions.map(r => ({ value: r, label: ACCENTS[r] || r || '기타' }))];
+            accentChips.innerHTML = chips.map(c =>
+                `<button data-accent="${escapeHtml(c.value)}" class="${chipClass(accentFilter === c.value)}">${escapeHtml(c.label)}</button>`
+            ).join('');
+        }
+
+        function renderVoiceList() {
+            if (!('speechSynthesis' in window) || englishVoices.length === 0) {
+                voiceList.innerHTML = `
+                    <div class="rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 p-4 text-sm text-slate-500 dark:text-slate-400 text-center">
+                        이 기기에서 사용할 수 있는 영어 목소리를 찾지 못했어요.
+                    </div>`;
+                return;
+            }
+            const selected = currentVoice();
+            const visible = englishVoices.filter(v => accentFilter === 'all' || voiceRegion(v) === accentFilter);
+            voiceList.innerHTML = visible.map(v => {
+                const idx = englishVoices.indexOf(v);
+                const active = selected && v.voiceURI === selected.voiceURI;
+                return `
+                    <div data-voice-index="${idx}" role="radio" aria-checked="${active}" tabindex="0"
+                         class="flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition ${active
+                            ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10 ring-2 ring-brand-500/20'
+                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}">
+                        <span class="w-5 h-5 shrink-0 rounded-full border-2 flex items-center justify-center ${active ? 'border-brand-500' : 'border-slate-300 dark:border-slate-600'}">
+                            ${active ? '<span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>' : ''}
+                        </span>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-semibold text-sm truncate">${escapeHtml(v.name)}</span>
+                                ${isRecommended(v) ? '<span class="shrink-0 px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 text-[10px] font-bold">추천</span>' : ''}
+                            </div>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">${escapeHtml(accentLabel(v))} · ${escapeHtml(v.lang)}</span>
+                        </div>
+                        <button data-preview-index="${idx}" class="w-9 h-9 shrink-0 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center" aria-label="이 목소리 미리 듣기">
+                            <i class="fa-solid fa-play text-xs"></i>
+                        </button>
+                    </div>`;
+            }).join('');
+        }
+
+        function updateVoiceChip() {
+            const voice = currentVoice();
+            const name = voice ? voice.name.replace(/^(Microsoft|Google)\s+/i, '').replace(/\s*\(.*\)$/, '') : '기본 목소리';
+            const accent = voice ? accentLabel(voice) : '미국';
+            voiceChipText.textContent = `${name} · ${accent} · ${Number(voiceSettings.rate).toFixed(2).replace(/0$/, '')}x`;
+        }
+
+        function syncSliders() {
+            rateInput.value = voiceSettings.rate;
+            pitchInput.value = voiceSettings.pitch;
+            rateValue.textContent = `${Number(voiceSettings.rate).toFixed(2).replace(/0$/, '')}x`;
+            pitchValue.textContent = Number(voiceSettings.pitch).toFixed(2).replace(/0$/, '');
+        }
+
+        function openVoiceSheet() {
+            loadVoices();
+            syncSliders();
+            voiceSheet.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeVoiceSheet() {
+            voiceSheet.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('open-voice-btn').addEventListener('click', openVoiceSheet);
+        document.getElementById('voice-chip').addEventListener('click', openVoiceSheet);
+        document.getElementById('close-voice-btn').addEventListener('click', closeVoiceSheet);
+        document.getElementById('voice-overlay').addEventListener('click', closeVoiceSheet);
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && !voiceSheet.classList.contains('hidden')) closeVoiceSheet();
+        });
+
+        accentChips.addEventListener('click', e => {
+            const chip = e.target.closest('[data-accent]');
+            if (!chip) return;
+            accentFilter = chip.dataset.accent;
+            renderAccentChips();
+            renderVoiceList();
+        });
+
+        function selectVoice(index) {
+            const voice = englishVoices[index];
+            if (!voice) return;
+            voiceSettings.voiceURI = voice.voiceURI;
+            saveVoiceSettings();
+            renderVoiceList();
+            updateVoiceChip();
+            speakEnglish(PREVIEW_TEXT);
+        }
+
+        voiceList.addEventListener('click', e => {
+            const preview = e.target.closest('[data-preview-index]');
+            if (preview) {
+                e.stopPropagation();
+                speakEnglish(PREVIEW_TEXT, null, englishVoices[Number(preview.dataset.previewIndex)]);
+                return;
+            }
+            const row = e.target.closest('[data-voice-index]');
+            if (row) selectVoice(Number(row.dataset.voiceIndex));
+        });
+
+        voiceList.addEventListener('keydown', e => {
+            const row = e.target.closest('[data-voice-index]');
+            if (row && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                selectVoice(Number(row.dataset.voiceIndex));
+            }
+        });
+
+        rateInput.addEventListener('input', () => {
+            voiceSettings.rate = Number(rateInput.value);
+            syncSliders();
+            updateVoiceChip();
+            saveVoiceSettings();
+        });
+
+        pitchInput.addEventListener('input', () => {
+            voiceSettings.pitch = Number(pitchInput.value);
+            syncSliders();
+            saveVoiceSettings();
+        });
+
+        document.getElementById('preview-voice-btn').addEventListener('click', () => speakEnglish(PREVIEW_TEXT));
+
+        document.getElementById('reset-voice-btn').addEventListener('click', () => {
+            voiceSettings = { ...DEFAULT_VOICE_SETTINGS };
+            saveVoiceSettings();
+            syncSliders();
+            renderVoiceList();
+            updateVoiceChip();
+        });
+
+        if ('speechSynthesis' in window) {
+            loadVoices();
+            // Voices load asynchronously in most browsers
+            window.speechSynthesis.addEventListener?.('voiceschanged', loadVoices);
+            if (!window.speechSynthesis.addEventListener) window.speechSynthesis.onvoiceschanged = loadVoices;
+        } else {
+            voiceChipText.textContent = '음성 미지원 브라우저';
+        }
+
+        // ── Progress ────────────────────────────────────────────────
+        function updateProgress() {
+            const total = rawData.length;
+            const learnedCount = Object.values(learnedState).filter(Boolean).length;
+            const percentage = Math.round((learnedCount / total) * 100);
+
+            progressBar.style.width = `${percentage}%`;
+            progressText.textContent = `${percentage}%`;
+            progressCount.textContent = learnedCount;
+            progressRing.style.strokeDashoffset = 163.36 * (1 - learnedCount / total);
+        }
+
+        // Save State to LocalStorage
+        function toggleLearned(id) {
+            learnedState[id] = !learnedState[id];
+            localStorage.setItem('english_200_learned', JSON.stringify(learnedState));
+            updateProgress();
+            render();
+        }
+
+        // Toggle card reveal
+        function toggleCardReveal(id) {
+            revealedCards[id] = !revealedCards[id];
+            renderCardAnswer(id);
+        }
+
+        function answerHtml(item, isRevealed) {
+            return `
+                <div class="flex items-center justify-between gap-3 w-full">
+                    <div class="min-w-0">
+                        <p class="answer-text font-en text-lg sm:text-xl font-bold tracking-tight text-brand-600 dark:text-brand-300 ${isRevealed ? '' : 'answer-hidden'}" ${isRevealed ? '' : 'aria-hidden="true"'}>${escapeHtml(item.en)}</p>
+                        ${isRevealed ? '' : '<p class="text-xs text-slate-400 dark:text-slate-500 mt-1"><i class="fa-regular fa-eye-slash mr-1"></i>탭해서 정답 확인</p>'}
+                    </div>
+                    ${isRevealed ? `
+                        <button data-speak="${item.id}" class="${speakingId === item.id ? 'is-speaking ' : ''}w-11 h-11 shrink-0 rounded-full bg-brand-600 hover:bg-brand-700 text-white flex items-center justify-center shadow-md shadow-brand-600/30 transition" title="발음 듣기" aria-label="발음 듣기">
+                            <i class="speaker-icon fa-solid fa-volume-high"></i>
+                            <span class="wave"><span></span><span></span><span></span></span>
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Re-render answer area for a single card without full re-render
+        function renderCardAnswer(id) {
+            const isRevealed = globalRevealAll || !!revealedCards[id];
+            const answerEl = document.getElementById(`answer-${id}`);
+            const item = rawData.find(d => d.id === id);
+            if (answerEl && item) {
+                answerEl.innerHTML = answerHtml(item, isRevealed);
+            }
+        }
+
+        // Render filter chips
+        function renderChips() {
+            rangeChips.innerHTML = RANGES.map(r =>
+                `<button data-range="${r.value}" class="${chipClass(currentRange === r.value)}">${r.label}</button>`
+            ).join('');
+            statusChips.innerHTML = STATUSES.map(s =>
+                `<button data-status="${s.value}" class="${chipClass(currentStatus === s.value)}">${s.label}</button>`
+            ).join('');
+        }
+
+        // Render Cards List
+        function render() {
+            const query = searchInput.value.trim().toLowerCase();
+
+            // Filter logic
+            let filtered = items.filter(item => {
+                // Range Filter
+                if (currentRange !== 'all') {
+                    const [min, max] = currentRange.split('-').map(Number);
+                    if (item.id < min || item.id > max) return false;
+                }
+
+                // Status Filter
+                const isLearned = !!learnedState[item.id];
+                if (currentStatus === 'learned' && !isLearned) return false;
+                if (currentStatus === 'unlearned' && isLearned) return false;
+
+                // Search Filter
+                if (query) {
+                    const matchId = item.id.toString() === query;
+                    const matchKr = item.kr.toLowerCase().includes(query);
+                    const matchEn = item.en.toLowerCase().includes(query);
+                    return matchId || matchKr || matchEn;
+                }
+
+                return true;
+            });
+
+            // Toggle empty state UI
+            if (filtered.length === 0) {
+                cardsContainer.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            // Build HTML string
+            cardsContainer.innerHTML = filtered.map((item, i) => {
+                const isLearned = !!learnedState[item.id];
+                const isRevealed = globalRevealAll || !!revealedCards[item.id];
+
+                return `
+                    <article id="card-${item.id}" data-card="${item.id}"
+                         style="animation-delay:${Math.min(i, 12) * 25}ms"
+                         class="card-in group relative rounded-3xl p-5 border ${isLearned
+                            ? 'bg-emerald-50/60 border-emerald-200 dark:bg-emerald-500/5 dark:border-emerald-500/20'
+                            : 'bg-white border-slate-200/70 dark:bg-slate-900 dark:border-slate-800'} shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition duration-200 cursor-pointer flex flex-col justify-between gap-4">
+
+                        <div>
+                            <!-- Top row: Number badge & learned toggle -->
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="font-en text-xs font-bold tracking-wider ${isLearned ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}">
+                                    #${String(item.id).padStart(3, '0')}
+                                </span>
+                                <button data-learn="${item.id}" aria-pressed="${isLearned}"
+                                        class="h-8 px-3 rounded-full text-xs font-bold flex items-center gap-1.5 transition ${isLearned
+                                            ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                                            : 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'}">
+                                    <i class="fa-solid ${isLearned ? 'fa-circle-check' : 'fa-check'}"></i>
+                                    ${isLearned ? '암기 완료' : '외웠어요'}
+                                </button>
+                            </div>
+
+                            <!-- Korean Expression -->
+                            <p class="text-slate-800 dark:text-slate-100 font-semibold text-[17px] sm:text-lg leading-snug">
+                                ${escapeHtml(item.kr)}
+                            </p>
+                        </div>
+
+                        <!-- English Answer Container -->
+                        <div id="answer-${item.id}" class="pt-4 border-t border-dashed ${isLearned ? 'border-emerald-200 dark:border-emerald-500/20' : 'border-slate-200 dark:border-slate-700'} min-h-[60px] flex items-center">
+                            ${answerHtml(item, isRevealed)}
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        // Card interactions (event delegation)
+        cardsContainer.addEventListener('click', e => {
+            const speakBtn = e.target.closest('[data-speak]');
+            if (speakBtn) {
+                const item = rawData.find(d => d.id === Number(speakBtn.dataset.speak));
+                if (item) speakEnglish(item.en, item.id);
+                return;
+            }
+            const learnBtn = e.target.closest('[data-learn]');
+            if (learnBtn) {
+                toggleLearned(Number(learnBtn.dataset.learn));
+                return;
+            }
+            const card = e.target.closest('[data-card]');
+            if (card) toggleCardReveal(Number(card.dataset.card));
+        });
+
+        // Event Listeners
+        searchInput.addEventListener('input', (e) => {
+            if (e.target.value.trim() !== '') {
+                clearSearchBtn.classList.remove('hidden');
+            } else {
+                clearSearchBtn.classList.add('hidden');
+            }
+            render();
+        });
+
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            clearSearchBtn.classList.add('hidden');
+            render();
+        });
+
+        rangeChips.addEventListener('click', e => {
+            const chip = e.target.closest('[data-range]');
+            if (!chip) return;
+            currentRange = chip.dataset.range;
+            renderChips();
+            render();
+        });
+
+        statusChips.addEventListener('click', e => {
+            const chip = e.target.closest('[data-status]');
+            if (!chip) return;
+            currentStatus = chip.dataset.status;
+            renderChips();
+            render();
+        });
+
+        // Toggle all answers reveal
+        toggleAllBtn.addEventListener('click', () => {
+            globalRevealAll = !globalRevealAll;
+            if (globalRevealAll) {
+                toggleAllText.textContent = '전체 정답 가리기';
+                toggleAllIcon.className = 'fa-regular fa-eye-slash';
+                toggleAllBtn.classList.add('bg-brand-50', 'text-brand-600', 'dark:bg-brand-500/10', 'dark:text-brand-300');
+            } else {
+                toggleAllText.textContent = '전체 정답 보기';
+                toggleAllIcon.className = 'fa-regular fa-eye';
+                toggleAllBtn.classList.remove('bg-brand-50', 'text-brand-600', 'dark:bg-brand-500/10', 'dark:text-brand-300');
+            }
+            render();
+        });
+
+        // Shuffle Items
+        shuffleBtn.addEventListener('click', () => {
+            isShuffled = !isShuffled;
+            if (isShuffled) {
+                // Fisher-Yates shuffle algorithm
+                for (let i = items.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [items[i], items[j]] = [items[j], items[i]];
+                }
+                shuffleText.textContent = '순서대로';
+                shuffleBtn.classList.add('bg-brand-50', 'text-brand-600', 'border-brand-200', 'dark:bg-brand-500/10', 'dark:text-brand-300', 'dark:border-brand-500/30');
+            } else {
+                items = [...rawData];
+                shuffleText.textContent = '무작위 섞기';
+                shuffleBtn.classList.remove('bg-brand-50', 'text-brand-600', 'border-brand-200', 'dark:bg-brand-500/10', 'dark:text-brand-300', 'dark:border-brand-500/30');
+            }
+            render();
+        });
+
+        // Reset progress
+        resetProgressBtn.addEventListener('click', () => {
+            if (confirm('모든 학습 완료 체크 기록을 초기화하시겠습니까?')) {
+                learnedState = {};
+                localStorage.removeItem('english_200_learned');
+                updateProgress();
+                render();
+            }
+        });
+
+        // Initial Initialization
+        renderChips();
+        updateProgress();
+        render();
+    </script>
+</body>
+</html>
