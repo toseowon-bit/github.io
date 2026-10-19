@@ -585,11 +585,26 @@
             return ACCENTS[region] || (region ? `영어 (${region})` : '영어');
         }
 
+        // Apple novelty/effect voices (robotic, singing, whispering…) — never offered
+        const NOVELTY_VOICES = /^(albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|organ|pipe organ|superstar|trinoids|whisper|wobble|zarvox|junior|ralph|fred|kathy|princess|bruce|agnes|vicki|victoria)\b/i;
+        // Older, robotic-sounding Apple voices — kept but listed last
+        const ROBOTIC_VOICES = /^(eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley)\b/i;
+        // Well-known natural system voices (Apple, Android, Windows)
+        const GOOD_VOICES = /^(samantha|ava|allison|susan|tom|alex|nicky|aaron|evan|zoe|nathan|joelle|noelle|daniel|serena|kate|oliver|arthur|martha|karen|lee|catherine|gordon|moira|tessa|rishi|aria|jenny|guy|zira|david|mark|hazel|george|libby|sonia|ryan|natasha|william)\b/i;
+
+        function isNovelty(voice) {
+            return NOVELTY_VOICES.test(voice.name.replace(/^(microsoft|google|apple)\s+/i, ''));
+        }
+
         // Higher score = more natural-sounding voice
         function voiceScore(voice) {
+            const name = voice.name.replace(/^(microsoft|apple)\s+/i, '');
             let score = 0;
-            if (/natural|neural|premium|enhanced|향상/i.test(voice.name)) score += 3;
+            if (/natural|neural|premium|enhanced|향상|고품질/i.test(voice.name)) score += 3;
             if (/google|online|siri/i.test(voice.name)) score += 2;
+            if (GOOD_VOICES.test(name)) score += 1;
+            if (ROBOTIC_VOICES.test(name)) score -= 3;
+            if (voice.default) score += 0.5;
             if (voiceRegion(voice) === 'US') score += 0.5;
             return score;
         }
@@ -602,7 +617,7 @@
             if (!('speechSynthesis' in window)) return;
             const seen = new Set();
             englishVoices = window.speechSynthesis.getVoices()
-                .filter(v => v.lang && v.lang.toLowerCase().startsWith('en'))
+                .filter(v => v.lang && v.lang.toLowerCase().startsWith('en') && !isNovelty(v))
                 .filter(v => !seen.has(v.voiceURI) && seen.add(v.voiceURI))
                 .sort((a, b) => voiceScore(b) - voiceScore(a) || a.name.localeCompare(b.name));
             renderAccentChips();
@@ -611,8 +626,8 @@
         }
 
         function currentVoice() {
+            // englishVoices is sorted best-first, so the fallback is the most natural voice
             return englishVoices.find(v => v.voiceURI === voiceSettings.voiceURI)
-                || englishVoices.find(v => voiceRegion(v) === 'US')
                 || englishVoices[0]
                 || null;
         }
