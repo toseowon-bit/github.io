@@ -234,9 +234,15 @@
 
                 <!-- Sheet body -->
                 <div class="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+                    <!-- AI voices (shown only when audio/voices.json exists) -->
+                    <div id="ai-voice-section" class="hidden">
+                        <p class="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">AI 음성 <span class="font-normal">· 가장 자연스러워요</span></p>
+                        <div id="ai-voice-list" class="space-y-2"></div>
+                    </div>
+
                     <!-- Accent filter -->
                     <div>
-                        <p class="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">억양</p>
+                        <p id="device-voice-heading" class="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">억양</p>
                         <div id="accent-chips" class="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1"></div>
                     </div>
 
@@ -256,8 +262,8 @@
                         <div class="flex justify-between text-[11px] text-slate-400 mt-1"><span>느리게</span><span>보통</span><span>빠르게</span></div>
                     </div>
 
-                    <!-- Pitch -->
-                    <div>
+                    <!-- Pitch (device voices only) -->
+                    <div id="pitch-section">
                         <div class="flex items-center justify-between mb-2">
                             <p class="text-xs font-semibold text-slate-400 dark:text-slate-500">목소리 높낮이</p>
                             <span id="pitch-value" class="text-sm font-bold text-brand-600 dark:text-brand-300">1.0</span>
@@ -555,7 +561,8 @@
 
         // ── Voice (TTS) ─────────────────────────────────────────────
         const VOICE_KEY = 'english_200_voice';
-        const DEFAULT_VOICE_SETTINGS = { voiceURI: null, rate: 0.9, pitch: 1 };
+        // aiVoice: key of an AI voice, null = first AI voice if any, 'off' = use a device voice
+        const DEFAULT_VOICE_SETTINGS = { voiceURI: null, aiVoice: null, rate: 0.9, pitch: 1 };
         const ACCENTS = {
             US: '미국', GB: '영국', AU: '호주', CA: '캐나다', IE: '아일랜드',
             NZ: '뉴질랜드', IN: '인도', ZA: '남아공', SG: '싱가포르', PH: '필리핀',
@@ -568,8 +575,10 @@
         } catch (e) { /* keep defaults */ }
 
         let englishVoices = [];
+        let aiVoices = []; // pre-generated MP3 voices from audio/voices.json
         let accentFilter = 'all';
         let speakingId = null;
+        const audioPlayer = new Audio();
 
         function saveVoiceSettings() {
             localStorage.setItem(VOICE_KEY, JSON.stringify(voiceSettings));
@@ -632,18 +641,66 @@
                 || null;
         }
 
+        function currentAiVoice() {
+            if (voiceSettings.aiVoice === 'off') return null;
+            return aiVoices.find(v => v.key === voiceSettings.aiVoice) || aiVoices[0] || null;
+        }
+
         function setSpeakingButton(id, on) {
             if (id == null) return;
             document.querySelectorAll(`[data-speak="${id}"]`).forEach(btn => btn.classList.toggle('is-speaking', on));
         }
 
+        function stopSpeaking() {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            audioPlayer.pause();
+            setSpeakingButton(speakingId, false);
+        }
+
+        // voiceOverride: an AI voice ({ key }) or a device SpeechSynthesisVoice
         function speakEnglish(text, id = null, voiceOverride = null) {
+            stopSpeaking();
+            const aiVoice = voiceOverride ? (voiceOverride.key ? voiceOverride : null) : currentAiVoice();
+            if (aiVoice) {
+                playAiVoice(aiVoice, text, id);
+            } else {
+                speakWithDevice(text, id, voiceOverride);
+            }
+        }
+
+        function playAiVoice(aiVoice, text, id) {
+            speakingId = id;
+            setSpeakingButton(id, true);
+            // A failed load fires both `error` and a rejected play(); settle each playback once
+            let settled = false;
+            const done = () => {
+                if (settled) return false;
+                settled = true;
+                setSpeakingButton(id, false);
+                if (speakingId === id) speakingId = null;
+                return true;
+            };
+            // If the MP3 is missing or fails, fall back to the device voice
+            const fallback = () => {
+                if (done()) speakWithDevice(text, id);
+            };
+            audioPlayer.onended = done;
+            audioPlayer.onerror = fallback;
+            audioPlayer.src = `audio/${encodeURIComponent(aiVoice.key)}/${id ?? 'preview'}.mp3`;
+            audioPlayer.playbackRate = voiceSettings.rate;
+            audioPlayer.preservesPitch = true;
+            audioPlayer.play().catch(err => {
+                // AbortError: interrupted by pause() or a newer sentence — not a failure
+                if (err.name === 'NotAllowedError' || err.name === 'AbortError') done(); else fallback();
+            });
+        }
+
+        function speakWithDevice(text, id = null, voiceOverride = null) {
             if (!('speechSynthesis' in window)) {
                 alert('이 브라우저는 음성 합성을 지원하지 않습니다.');
                 return;
             }
             window.speechSynthesis.cancel(); // Stop current speech
-            setSpeakingButton(speakingId, false);
 
             const utterance = new SpeechSynthesisUtterance(text);
             const voice = voiceOverride || currentVoice();
@@ -676,6 +733,10 @@
         const pitchInput = document.getElementById('pitch-input');
         const pitchValue = document.getElementById('pitch-value');
         const voiceChipText = document.getElementById('voice-chip-text');
+        const aiVoiceSection = document.getElementById('ai-voice-section');
+        const aiVoiceList = document.getElementById('ai-voice-list');
+        const deviceVoiceHeading = document.getElementById('device-voice-heading');
+        const pitchSection = document.getElementById('pitch-section');
 
         function chipClass(active) {
             return `shrink-0 h-9 px-3.5 rounded-full text-sm font-semibold transition whitespace-nowrap ${active
@@ -701,34 +762,66 @@
                     </div>`;
                 return;
             }
-            const selected = currentVoice();
+            const selected = currentAiVoice() ? null : currentVoice();
             const visible = englishVoices.filter(v => accentFilter === 'all' || voiceRegion(v) === accentFilter);
             voiceList.innerHTML = visible.map(v => {
                 const idx = englishVoices.indexOf(v);
-                const active = selected && v.voiceURI === selected.voiceURI;
-                return `
-                    <div data-voice-index="${idx}" role="radio" aria-checked="${active}" tabindex="0"
-                         class="flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition ${active
-                            ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10 ring-2 ring-brand-500/20'
-                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}">
-                        <span class="w-5 h-5 shrink-0 rounded-full border-2 flex items-center justify-center ${active ? 'border-brand-500' : 'border-slate-300 dark:border-slate-600'}">
-                            ${active ? '<span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>' : ''}
-                        </span>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-1.5">
-                                <span class="font-semibold text-sm truncate">${escapeHtml(v.name)}</span>
-                                ${isRecommended(v) ? '<span class="shrink-0 px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 text-[10px] font-bold">추천</span>' : ''}
-                            </div>
-                            <span class="text-xs text-slate-500 dark:text-slate-400">${escapeHtml(accentLabel(v))} · ${escapeHtml(v.lang)}</span>
-                        </div>
-                        <button data-preview-index="${idx}" class="w-9 h-9 shrink-0 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center" aria-label="이 목소리 미리 듣기">
-                            <i class="fa-solid fa-play text-xs"></i>
-                        </button>
-                    </div>`;
+                const active = !!selected && v.voiceURI === selected.voiceURI;
+                const badge = isRecommended(v) ? '<span class="shrink-0 px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 text-[10px] font-bold">추천</span>' : '';
+                return voiceRowHtml({
+                    attrs: `data-voice-index="${idx}"`,
+                    previewAttrs: `data-preview-index="${idx}"`,
+                    active,
+                    title: v.name,
+                    badge,
+                    subtitle: `${accentLabel(v)} · ${v.lang}`,
+                });
             }).join('');
         }
 
+        function voiceRowHtml({ attrs, previewAttrs, active, title, badge, subtitle }) {
+            return `
+                <div ${attrs} role="radio" aria-checked="${active}" tabindex="0"
+                     class="flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition ${active
+                        ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10 ring-2 ring-brand-500/20'
+                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}">
+                    <span class="w-5 h-5 shrink-0 rounded-full border-2 flex items-center justify-center ${active ? 'border-brand-500' : 'border-slate-300 dark:border-slate-600'}">
+                        ${active ? '<span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>' : ''}
+                    </span>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-semibold text-sm truncate">${escapeHtml(title)}</span>
+                            ${badge}
+                        </div>
+                        <span class="text-xs text-slate-500 dark:text-slate-400">${escapeHtml(subtitle)}</span>
+                    </div>
+                    <button ${previewAttrs} class="w-9 h-9 shrink-0 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center" aria-label="이 목소리 미리 듣기">
+                        <i class="fa-solid fa-play text-xs"></i>
+                    </button>
+                </div>`;
+        }
+
+        function renderAiVoiceList() {
+            aiVoiceSection.classList.toggle('hidden', aiVoices.length === 0);
+            deviceVoiceHeading.textContent = aiVoices.length ? '기기 음성 · 억양' : '억양';
+            const selected = currentAiVoice();
+            pitchSection.classList.toggle('hidden', !!selected); // pitch only applies to device voices
+            aiVoiceList.innerHTML = aiVoices.map(v => voiceRowHtml({
+                attrs: `data-ai-voice="${escapeHtml(v.key)}"`,
+                previewAttrs: `data-ai-preview="${escapeHtml(v.key)}"`,
+                active: !!selected && v.key === selected.key,
+                title: v.label,
+                badge: '<span class="shrink-0 px-1.5 py-0.5 rounded-md bg-brand-100 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300 text-[10px] font-bold">AI</span>',
+                subtitle: [v.accent, v.gender].filter(Boolean).join(' · '),
+            })).join('');
+        }
+
         function updateVoiceChip() {
+            const aiVoice = currentAiVoice();
+            if (aiVoice) {
+                voiceChipText.textContent = `${aiVoice.label} (AI) · ${aiVoice.accent || '영어'} · ${Number(voiceSettings.rate).toFixed(2).replace(/0$/, '')}x`;
+                return;
+            }
             const voice = currentVoice();
             const name = voice ? voice.name.replace(/^(Microsoft|Google)\s+/i, '').replace(/\s*\(.*\)$/, '') : '기본 목소리';
             const accent = voice ? accentLabel(voice) : '미국';
@@ -744,6 +837,7 @@
 
         function openVoiceSheet() {
             loadVoices();
+            renderAiVoiceList();
             syncSliders();
             voiceSheet.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
@@ -762,6 +856,36 @@
             if (e.key === 'Escape' && !voiceSheet.classList.contains('hidden')) closeVoiceSheet();
         });
 
+        function selectAiVoice(key) {
+            const voice = aiVoices.find(v => v.key === key);
+            if (!voice) return;
+            voiceSettings.aiVoice = key;
+            saveVoiceSettings();
+            renderAiVoiceList();
+            renderVoiceList();
+            updateVoiceChip();
+            speakEnglish(PREVIEW_TEXT);
+        }
+
+        aiVoiceList.addEventListener('click', e => {
+            const preview = e.target.closest('[data-ai-preview]');
+            if (preview) {
+                e.stopPropagation();
+                speakEnglish(PREVIEW_TEXT, null, aiVoices.find(v => v.key === preview.dataset.aiPreview));
+                return;
+            }
+            const row = e.target.closest('[data-ai-voice]');
+            if (row) selectAiVoice(row.dataset.aiVoice);
+        });
+
+        aiVoiceList.addEventListener('keydown', e => {
+            const row = e.target.closest('[data-ai-voice]');
+            if (row && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                selectAiVoice(row.dataset.aiVoice);
+            }
+        });
+
         accentChips.addEventListener('click', e => {
             const chip = e.target.closest('[data-accent]');
             if (!chip) return;
@@ -774,7 +898,9 @@
             const voice = englishVoices[index];
             if (!voice) return;
             voiceSettings.voiceURI = voice.voiceURI;
+            voiceSettings.aiVoice = 'off';
             saveVoiceSettings();
+            renderAiVoiceList();
             renderVoiceList();
             updateVoiceChip();
             speakEnglish(PREVIEW_TEXT);
@@ -818,9 +944,22 @@
             voiceSettings = { ...DEFAULT_VOICE_SETTINGS };
             saveVoiceSettings();
             syncSliders();
+            renderAiVoiceList();
             renderVoiceList();
             updateVoiceChip();
         });
+
+        // Pre-generated AI voices: audio/voices.json → { voices: [{ key, label, accent, gender }] }
+        fetch('audio/voices.json', { cache: 'no-cache' })
+            .then(res => (res.ok ? res.json() : null))
+            .then(manifest => {
+                aiVoices = Array.isArray(manifest?.voices) ? manifest.voices : [];
+                if (!aiVoices.length) return;
+                renderAiVoiceList();
+                renderVoiceList();
+                updateVoiceChip();
+            })
+            .catch(() => { /* no AI voices — device voices only */ });
 
         if ('speechSynthesis' in window) {
             loadVoices();

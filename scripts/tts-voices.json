@@ -1,0 +1,5 @@
+[
+  { "key": "us-female", "label": "Aoede", "accent": "미국", "gender": "여성", "googleVoice": "en-US-Chirp3-HD-Aoede" },
+  { "key": "us-male", "label": "Charon", "accent": "미국", "gender": "남성", "googleVoice": "en-US-Chirp3-HD-Charon" },
+  { "key": "gb-female", "label": "Aoede", "accent": "영국", "gender": "여성", "googleVoice": "en-GB-Chirp3-HD-Aoede" }
+]
