@@ -1,0 +1,28 @@
+{
+  "voices": [
+    {
+      "key": "us-female",
+      "label": "Kore",
+      "accent": "미국",
+      "gender": "여성"
+    },
+    {
+      "key": "us-male",
+      "label": "Puck",
+      "accent": "미국",
+      "gender": "남성"
+    },
+    {
+      "key": "gb-female",
+      "label": "Studio C",
+      "accent": "영국",
+      "gender": "여성"
+    },
+    {
+      "key": "gb-male",
+      "label": "Orus",
+      "accent": "영국",
+      "gender": "남성"
+    }
+  ]
+}
