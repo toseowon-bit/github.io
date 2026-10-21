@@ -4,13 +4,17 @@
 //   GOOGLE_TTS_API_KEY=... node scripts/generate-tts.mjs list [en-US]        # list available voices
 //   GOOGLE_TTS_API_KEY=... node scripts/generate-tts.mjs samples <dir> <voice name>...
 //   GOOGLE_TTS_API_KEY=... node scripts/generate-tts.mjs build               # audio/<key>/<id>.mp3 + audio/voices.json
+//   GOOGLE_TTS_API_KEY=... node scripts/generate-tts.mjs recheck             # build, also redoing existing cut-off files
 //
 // `build` reads scripts/tts-voices.json, skips files that already exist, and rewrites
 // audio/voices.json, which the app uses to show its "AI 음성" options.
+// Chirp3-HD voices sometimes stop mid-word, so their takes are checked with ffmpeg (if installed)
+// and re-synthesized until they end in silence.
 // Behind an HTTPS proxy, run with NODE_USE_ENV_PROXY=1 (Node >= 22.21).
 
 import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -18,6 +22,8 @@ const API = 'https://texttospeech.googleapis.com/v1';
 const PREVIEW_TEXT = "Hi there! Let's practice English together."; // keep in sync with index.html
 const SAMPLE_TEXT = "I lost track of time. Can we push it back an hour?";
 const CONCURRENCY = 4;
+const CUT_OFF_DB = -50; // RMS of a take's last 40ms; louder means it ended mid-speech
+const ATTEMPTS = 10;    // the second half adds a trailing pause, which often lets the voice finish
 
 const apiKey = process.env.GOOGLE_TTS_API_KEY;
 if (!apiKey) {
@@ -41,17 +47,50 @@ async function api(path, init = {}) {
     }
 }
 
-async function synthesize(text, voiceName) {
+async function synthesize(input, voiceName) {
     const languageCode = voiceName.split('-').slice(0, 2).join('-');
     const { audioContent } = await api('/text:synthesize', {
         method: 'POST',
         body: JSON.stringify({
-            input: { text },
+            input,
             voice: { languageCode, name: voiceName },
             audioConfig: { audioEncoding: 'MP3' },
         }),
     });
     return Buffer.from(audioContent, 'base64');
+}
+
+let warnedNoFfmpeg = false;
+
+// RMS level (dB) of the last 40ms of an MP3, or null when ffmpeg is unavailable
+function tailDb(audio) {
+    const { stderr, error } = spawnSync('ffmpeg', ['-hide_banner', '-i', 'pipe:0',
+        '-af', 'areverse,atrim=0:0.04,astats=metadata=0', '-f', 'null', '-'], { input: audio });
+    if (error) {
+        if (!warnedNoFfmpeg) console.warn('ffmpeg not found: skipping the cut-off check');
+        warnedNoFfmpeg = true;
+        return null;
+    }
+    const level = stderr.toString().match(/RMS level dB: (\S+)/)?.[1];
+    return level === undefined || level === '-inf' ? -Infinity : Number(level);
+}
+
+function isCutOff(audio, voiceName) {
+    return voiceName.includes('Chirp3') && (tailDb(audio) ?? -Infinity) > CUT_OFF_DB;
+}
+
+// Synthesizes `text`, retrying takes that end mid-speech; keeps the quietest ending if none is clean
+async function synthesizeWhole(text, voiceName) {
+    let best = null;
+    for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
+        const input = attempt < ATTEMPTS / 2 ? { text } : { markup: `${text} [pause short]` };
+        const audio = await synthesize(input, voiceName);
+        const db = voiceName.includes('Chirp3') ? tailDb(audio) : null;
+        if (db === null || db <= CUT_OFF_DB) return audio;
+        if (!best || db < best.db) best = { audio, db };
+    }
+    console.warn(`  still cut off after ${ATTEMPTS} attempts: ${voiceName} "${text}"`);
+    return best.audio;
 }
 
 async function exists(path) {
@@ -83,12 +122,13 @@ async function list(languageCode = 'en-US') {
 async function samples(dir, voiceNames) {
     await mkdir(dir, { recursive: true });
     for (const name of voiceNames) {
-        await writeFile(join(dir, `${name}.mp3`), await synthesize(SAMPLE_TEXT, name));
+        await writeFile(join(dir, `${name}.mp3`), await synthesizeWhole(SAMPLE_TEXT, name));
         console.log(`wrote ${join(dir, `${name}.mp3`)}`);
     }
 }
 
-async function build() {
+// recheck: also re-synthesize existing files that were cut off
+async function build({ recheck = false } = {}) {
     const voices = JSON.parse(await readFile(join(ROOT, 'scripts', 'tts-voices.json'), 'utf8'));
     const sentences = await loadSentences();
     for (const voice of voices) {
@@ -98,8 +138,8 @@ async function build() {
         let written = 0;
         await runPool(jobs.map(job => async () => {
             const path = join(outDir, `${job.file}.mp3`);
-            if (await exists(path)) return;
-            await writeFile(path, await synthesize(job.text, voice.googleVoice));
+            if (await exists(path) && !(recheck && isCutOff(await readFile(path), voice.googleVoice))) return;
+            await writeFile(path, await synthesizeWhole(job.text, voice.googleVoice));
             written++;
         }));
         console.log(`${voice.key} (${voice.googleVoice}): ${written} new files`);
@@ -113,7 +153,8 @@ const [command, ...args] = process.argv.slice(2);
 if (command === 'list') await list(args[0]);
 else if (command === 'samples' && args.length >= 2) await samples(args[0], args.slice(1));
 else if (command === 'build') await build();
+else if (command === 'recheck') await build({ recheck: true });
 else {
-    console.error('Usage: generate-tts.mjs list [languageCode] | samples <dir> <voice>... | build');
+    console.error('Usage: generate-tts.mjs list [languageCode] | samples <dir> <voice>... | build | recheck');
     process.exit(1);
 }
