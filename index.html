@@ -234,20 +234,19 @@
 
                 <!-- Sheet body -->
                 <div class="flex-1 overflow-y-auto px-5 py-4 space-y-5">
-                    <!-- AI voices (shown only when audio/voices.json exists) -->
-                    <div id="ai-voice-section" class="hidden">
-                        <p class="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">AI 음성 <span class="font-normal">· 가장 자연스러워요</span></p>
+                    <!-- AI voices -->
+                    <div id="ai-voice-section">
+                        <p class="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">목소리</p>
                         <div id="ai-voice-list" class="space-y-2"></div>
                     </div>
 
-                    <!-- Accent filter -->
-                    <div>
+                    <!-- Device voices: hidden, used only as a silent fallback when an AI file fails -->
+                    <div class="hidden">
                         <p id="device-voice-heading" class="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">억양</p>
                         <div id="accent-chips" class="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1"></div>
                     </div>
 
-                    <!-- Voice list -->
-                    <div>
+                    <div class="hidden">
                         <p class="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">목소리</p>
                         <div id="voice-list" class="space-y-2"></div>
                     </div>
@@ -263,20 +262,13 @@
                     </div>
 
                     <!-- Pitch (device voices only) -->
-                    <div id="pitch-section">
+                    <div id="pitch-section" class="hidden">
                         <div class="flex items-center justify-between mb-2">
                             <p class="text-xs font-semibold text-slate-400 dark:text-slate-500">목소리 높낮이</p>
                             <span id="pitch-value" class="text-sm font-bold text-brand-600 dark:text-brand-300">1.0</span>
                         </div>
                         <input id="pitch-input" type="range" min="0.5" max="1.5" step="0.05" value="1" class="w-full">
                         <div class="flex justify-between text-[11px] text-slate-400 mt-1"><span>낮게</span><span>보통</span><span>높게</span></div>
-                    </div>
-
-                    <div class="rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-3.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                        <p class="font-semibold text-slate-600 dark:text-slate-300 mb-1"><i class="fa-solid fa-circle-info mr-1"></i> 목소리가 마음에 안 드나요?</p>
-                        목소리 목록은 기기와 브라우저마다 달라요. <b>추천</b> 표시가 있는 목소리가 더 자연스러워요.<br>
-                        · 아이폰/아이패드: 설정 → 손쉬운 사용 → 읽기 및 말하기 → 음성 → 영어에서 <b>고품질(향상된)</b> 음성을 내려받을 수 있어요.<br>
-                        · PC: Microsoft Edge 브라우저에서는 매우 자연스러운 <b>Natural</b> 음성을 쓸 수 있어요.
                     </div>
                 </div>
 
@@ -575,7 +567,13 @@
         } catch (e) { /* keep defaults */ }
 
         let englishVoices = [];
-        let aiVoices = []; // pre-generated MP3 voices from audio/voices.json
+        // Pre-generated MP3 voices in audio/<key>/<id>.mp3 — keep in sync with scripts/tts-voices.json
+        const aiVoices = [
+            { key: 'us-female', label: 'Kore', accent: '미국', gender: '여성' },
+            { key: 'us-male', label: 'Puck', accent: '미국', gender: '남성' },
+            { key: 'gb-female', label: 'Studio C', accent: '영국', gender: '여성' },
+            { key: 'gb-male', label: 'Orus', accent: '영국', gender: '남성' },
+        ];
         let accentFilter = 'all';
         let speakingId = null;
         const audioPlayer = new Audio();
@@ -642,7 +640,7 @@
         }
 
         function currentAiVoice() {
-            if (voiceSettings.aiVoice === 'off') return null;
+            // Only AI voices are offered; an old 'off' (device voice) choice falls back to the first one
             return aiVoices.find(v => v.key === voiceSettings.aiVoice) || aiVoices[0] || null;
         }
 
@@ -949,26 +947,14 @@
             updateVoiceChip();
         });
 
-        // Pre-generated AI voices: audio/voices.json → { voices: [{ key, label, accent, gender }] }
-        fetch('audio/voices.json', { cache: 'no-cache' })
-            .then(res => (res.ok ? res.json() : null))
-            .then(manifest => {
-                aiVoices = Array.isArray(manifest?.voices) ? manifest.voices : [];
-                if (!aiVoices.length) return;
-                renderAiVoiceList();
-                renderVoiceList();
-                updateVoiceChip();
-            })
-            .catch(() => { /* no AI voices — device voices only */ });
-
         if ('speechSynthesis' in window) {
             loadVoices();
             // Voices load asynchronously in most browsers
             window.speechSynthesis.addEventListener?.('voiceschanged', loadVoices);
             if (!window.speechSynthesis.addEventListener) window.speechSynthesis.onvoiceschanged = loadVoices;
-        } else {
-            voiceChipText.textContent = '음성 미지원 브라우저';
         }
+        renderAiVoiceList();
+        updateVoiceChip();
 
         // ── Progress ────────────────────────────────────────────────
         function updateProgress() {
