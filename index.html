@@ -81,6 +81,37 @@
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { scrollbar-width: none; }
+
+        /* Quiz styles are scoped so existing cards and voice settings stay unchanged. */
+        .quiz { background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; padding: clamp(18px, 4vw, 28px); }
+        .dark .quiz { background: #0f172a; border-color: #334155; }
+        .quiz-top, .quiz-actions, .quiz-metrics { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+        .quiz-top { justify-content: space-between; }
+        .quiz h2 { font-size: 21px; font-weight: 800; letter-spacing: -.03em; }
+        .quiz-note { font-size: 13px; color: #64748b; line-height: 1.7; }
+        .dark .quiz-note { color: #94a3b8; }
+        .quiz button { min-height: 46px; padding: 10px 16px; border-radius: 14px; font-size: 14px; font-weight: 700; border: 1px solid #cbd5e1; }
+        .quiz button:focus-visible { outline: 3px solid #818cf8; outline-offset: 3px; }
+        .quiz button:hover { filter: brightness(.95); }
+        .quiz button:disabled { opacity: .5; cursor: not-allowed; }
+        .quiz button[aria-pressed="true"], .quiz .quiz-primary { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+        .quiz .quiz-good { background: #047857; color: #fff; border-color: #047857; }
+        .quiz .quiz-again { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
+        .quiz-metrics { margin: 18px 0; gap: 8px; }
+        .quiz-metrics span { padding: 8px 12px; border-radius: 12px; background: #f1f5f9; font-size: 13px; }
+        .dark .quiz-metrics span { background: #1e293b; }
+        .quiz-question { margin: 18px 0; padding: clamp(18px, 4vw, 30px); border-radius: 20px; background: #f8fafc; border: 1px solid #e2e8f0; }
+        .dark .quiz-question { background: #020617; border-color: #334155; }
+        .quiz-prompt { font-size: clamp(21px, 4vw, 28px); font-weight: 750; line-height: 1.5; margin: 16px 0 24px; overflow-wrap: anywhere; }
+        .quiz-answer { font-size: clamp(22px, 4vw, 30px); color: #4f46e5; font-weight: 750; line-height: 1.5; margin: 16px 0; overflow-wrap: anywhere; }
+        .dark .quiz-answer { color: #a5b4fc; }
+        .quiz-progress { width: 100%; height: 7px; accent-color: #4f46e5; margin-top: 16px; }
+        .quiz-progress::-webkit-progress-bar { background: #e2e8f0; border-radius: 999px; }
+        .quiz-progress::-webkit-progress-value { background: #4f46e5; border-radius: 999px; }
+        .quiz-progress::-moz-progress-bar { background: #4f46e5; border-radius: 999px; }
+        .quiz-message { color: #be123c; font-size: 13px; margin-top: 10px; }
+        @media (max-width: 480px) { .quiz-actions > button { flex: 1 1 auto; } .quiz-top > .quiz-actions { width: 100%; } }
+        @media (prefers-reduced-motion: reduce) { .card-in, .wave span { animation: none; } }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-full flex flex-col transition-colors duration-200">
@@ -152,6 +183,22 @@
                     </div>
                 </div>
             </div>
+        </section>
+
+
+        <section id="review-quiz" class="quiz" aria-labelledby="quiz-heading">
+            <div class="quiz-top">
+                <div><p class="quiz-note">매일 조금씩, 내 말이 되는 영어</p><h2 id="quiz-heading">하루 10문장 복습</h2></div>
+                <div class="quiz-actions" aria-label="퀴즈 모드">
+                    <button id="quiz-daily" type="button" aria-pressed="true">오늘의 10문장</button>
+                    <button id="quiz-wrong" type="button" aria-pressed="false">오답 다시 풀기</button>
+                </div>
+            </div>
+            <p class="quiz-note" style="margin-top:12px">한국어를 보고 영어로 말해보세요. 정답 확인 후 스스로 평가해요. 음성 인식이나 자동 채점은 하지 않아요.</p>
+            <div id="quiz-metrics" class="quiz-metrics"></div>
+            <div id="quiz-content" aria-live="polite" aria-atomic="true"></div>
+            <p id="quiz-storage-message" class="quiz-message" role="status"></p>
+            <p class="quiz-note">퀴즈와 기존 암기 체크는 따로 저장돼요. 기록은 현재 기기·브라우저에만 보관되며 아이폰과 맥북 간 자동 동기화되지 않아요.</p>
         </section>
 
         <!-- Controls & Filters Section -->
@@ -1196,5 +1243,162 @@
         updateProgress();
         render();
     </script>
+
+    <script>
+    (() => {
+        'use strict';
+        const KEY = 'english_200_quiz_v1';
+        const validIds = new Set(rawData.map(item => item.id));
+        const byId = new Map(rawData.map(item => [item.id, item]));
+        const content = document.getElementById('quiz-content');
+        const metrics = document.getElementById('quiz-metrics');
+        const dailyButton = document.getElementById('quiz-daily');
+        const wrongButton = document.getElementById('quiz-wrong');
+        const message = document.getElementById('quiz-storage-message');
+        const emptyState = () => ({ version: 1, days: {}, completedSets: [], stats: {}, review: null });
+        let state = emptyState();
+        let mode = 'daily';
+        let revealed = false;
+        let renderedDate = '';
+        let damagedStorage = false;
+        const own = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
+        const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+        try {
+            const saved = localStorage.getItem(KEY);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (!isObject(parsed) || parsed.version !== 1 || !isObject(parsed.days) || !isObject(parsed.stats) ||
+                    !Array.isArray(parsed.completedSets) || parsed.completedSets.some(n => !Number.isInteger(n) || n < 0 || n >= 20)) throw Error('Invalid quiz data');
+                for (const day of Object.values(parsed.days)) {
+                    if (!isObject(day) || !Number.isInteger(day.set) || day.set < 0 || day.set >= 20 || !Array.isArray(day.ids) ||
+                        day.ids.length !== 10 || new Set(day.ids).size !== 10 || day.ids.some(id => !validIds.has(id)) ||
+                        !isObject(day.answers) || Object.entries(day.answers).some(([id, answer]) => !day.ids.includes(Number(id)) || typeof answer !== 'boolean')) throw Error('Invalid day');
+                }
+                for (const [id, stat] of Object.entries(parsed.stats)) {
+                    if (!validIds.has(Number(id)) || !isObject(stat) || typeof stat.lastCorrect !== 'boolean' ||
+                        !Number.isSafeInteger(stat.correct) || stat.correct < 0 || !Number.isSafeInteger(stat.wrong) || stat.wrong < 0) throw Error('Invalid result');
+                }
+                if (parsed.review !== null && (!isObject(parsed.review) || !Array.isArray(parsed.review.ids) ||
+                    new Set(parsed.review.ids).size !== parsed.review.ids.length || parsed.review.ids.some(id => !validIds.has(id)) ||
+                    !isObject(parsed.review.answers) || Object.entries(parsed.review.answers).some(([id, answer]) => !parsed.review.ids.includes(Number(id)) || typeof answer !== 'boolean'))) throw Error('Invalid review');
+                state = parsed;
+            }
+        } catch (error) {
+            // Never clear, migrate or overwrite other app keys, even on malformed quiz storage.
+            damagedStorage = true;
+            message.textContent = '퀴즈 기록을 읽을 수 없어 임시 모드로 시작했어요. 기존 저장 내용은 덮어쓰지 않아요. 새로고침하면 이번 퀴즈 진행이 사라질 수 있어요.';
+        }
+        function save() {
+            if (damagedStorage) return;
+            try {
+                localStorage.setItem(KEY, JSON.stringify(state));
+                message.textContent = '';
+            } catch (error) {
+                message.textContent = '기록을 저장하지 못했어요. 이 화면에서는 계속 풀 수 있지만 새로고침하면 진행이 사라질 수 있어요.';
+            }
+        }
+        function dateKey() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        }
+        function today() {
+            const key = dateKey();
+            if (!own(state.days, key)) {
+                if (state.completedSets.length >= 20) state.completedSets = [];
+                const set = Array.from({ length: 20 }, (_, i) => i).find(i => !state.completedSets.includes(i));
+                state.days[key] = { set, ids: rawData.slice(set * 10, set * 10 + 10).map(item => item.id), answers: {} };
+                save();
+            }
+            return state.days[key];
+        }
+        const wrongIds = () => rawData.filter(item => state.stats[item.id]?.lastCorrect === false).map(item => item.id);
+        const pending = run => run.ids.filter(id => !own(run.answers, id));
+        const button = (action, text, classes = '') => `<button type="button" data-quiz-action="${action}" class="${classes}">${text}</button>`;
+        function activeRun() { return mode === 'daily' ? today() : state.review; }
+        function renderQuiz(focus = false) {
+            renderedDate = dateKey();
+            const daily = today();
+            const wrong = wrongIds();
+            dailyButton.setAttribute('aria-pressed', String(mode === 'daily'));
+            wrongButton.setAttribute('aria-pressed', String(mode === 'wrong'));
+            wrongButton.textContent = `오답 다시 풀기 (${wrong.length})`;
+            const allStats = Object.values(state.stats);
+            const correct = allStats.reduce((sum, stat) => sum + stat.correct, 0);
+            const incorrect = allStats.reduce((sum, stat) => sum + stat.wrong, 0);
+            metrics.innerHTML = `<span>오늘 ${Object.keys(daily.answers).length} / 10</span><span>누적 정답 ${correct}회</span><span>누적 오답 ${incorrect}회</span>`;
+            let run = activeRun();
+            if (mode === 'wrong' && !run) {
+                content.innerHTML = `<div class="quiz-question"><h3 tabindex="-1">${wrong.length ? '틀린 문장만 한 번 더 연습해요' : '남은 오답이 없어요'}</h3><p class="quiz-note" style="margin:12px 0">${wrong.length ? '최근 평가가 오답인 문장을 모았어요. 맞힌 문장은 오답 목록에서 빠져요.' : '오늘의 10문장을 풀거나 아래 전체 문장에서 자유롭게 연습해보세요.'}</p>${wrong.length ? button('review', `${wrong.length}문장 복습 시작`, 'quiz-primary') : button('daily', '오늘의 학습 보기')}</div>`;
+            } else {
+                const remaining = pending(run);
+                const done = run.ids.length - remaining.length;
+                if (!remaining.length) {
+                    const right = Object.values(run.answers).filter(Boolean).length;
+                    content.innerHTML = `<div class="quiz-question"><h3 tabindex="-1" style="font-size:22px;font-weight:800">${mode === 'daily' ? '오늘의 10문장 완료!' : '오답 복습 완료!'}</h3><p class="quiz-note" style="margin:12px 0">이번 학습: 정답 ${right}개 · 오답 ${run.ids.length - right}개${mode === 'daily' ? '<br>다음 10문장은 내일 준비돼요. 아래 전체 문장은 언제든 학습할 수 있어요.' : ''}</p><div class="quiz-actions">${wrong.length ? button('review', `남은 오답 ${wrong.length}문장 다시 풀기`, 'quiz-primary') : '<p class="quiz-note">남은 오답이 없어요. 잘하셨어요!</p>'}${mode === 'wrong' ? button('daily', '오늘의 학습 보기') : ''}</div></div>`;
+                } else {
+                    const item = byId.get(remaining[0]);
+                    content.innerHTML = `<progress class="quiz-progress" value="${done}" max="${run.ids.length}" aria-label="퀴즈 진행"></progress><div class="quiz-question"><p class="quiz-note">${mode === 'daily' ? `DAY ${daily.set + 1} · 오늘의 10문장` : '오답 집중 복습'} · ${done + 1} / ${run.ids.length} · #${item.id}</p><h3 tabindex="-1" class="quiz-prompt">${escapeHtml(item.kr)}</h3>${revealed ? `<p class="quiz-answer font-en" lang="en">${escapeHtml(item.en)}</p><div class="quiz-actions"><button type="button" data-quiz-action="speak" data-speak="${item.id}" aria-label="영어 정답 듣기">정답 듣기</button></div><p class="quiz-note" style="margin:16px 0">말한 내용과 비교해 스스로 평가해주세요. 뜻이 같은 다른 표현도 괜찮아요.</p><div class="quiz-actions">${button('wrong', '다시 연습 · 오답', 'quiz-again')}${button('correct', '맞혔어요 · 정답', 'quiz-good')}</div>` : `<p class="quiz-note" style="margin-bottom:16px">먼저 소리 내어 말하거나 머릿속으로 떠올려보세요.</p>${button('reveal', '영어 정답 확인', 'quiz-primary')}`}</div>`;
+                }
+            }
+            if (focus) content.querySelector('h3')?.focus({ preventScroll: true });
+        }
+        function startReview() {
+            const ids = wrongIds();
+            mode = 'wrong';
+            // Preserve an unfinished review so changing tabs or refreshing never loses progress.
+            if (!state.review || !pending(state.review).length) {
+                state.review = ids.length ? { ids, answers: {} } : null;
+            }
+            revealed = false;
+            stopSpeaking();
+            save();
+            renderQuiz(true);
+        }
+        function switchDaily() { mode = 'daily'; revealed = false; stopSpeaking(); renderQuiz(true); }
+        dailyButton.addEventListener('click', switchDaily);
+        wrongButton.addEventListener('click', startReview);
+        content.addEventListener('click', event => {
+            const control = event.target.closest('[data-quiz-action]');
+            if (!control) return;
+            if (renderedDate !== dateKey()) {
+                revealed = false;
+                stopSpeaking();
+                renderQuiz(true);
+                return;
+            }
+            const action = control.dataset.quizAction;
+            if (action === 'daily') return switchDaily();
+            if (action === 'review') return startReview();
+            const run = activeRun();
+            const id = run && pending(run)[0];
+            if (!id) return;
+            if (action === 'speak' && revealed) { speakEnglish(byId.get(id).en, id); return; }
+            if (action === 'reveal') {
+                revealed = true;
+                renderQuiz();
+                content.querySelector('[data-quiz-action="speak"]')?.focus({ preventScroll: true });
+                return;
+            }
+            if (!revealed || (action !== 'correct' && action !== 'wrong')) return;
+            const correct = action === 'correct';
+            run.answers[id] = correct;
+            const stat = state.stats[id] || { correct: 0, wrong: 0 };
+            stat[correct ? 'correct' : 'wrong']++;
+            stat.lastCorrect = correct;
+            state.stats[id] = stat;
+            if (mode === 'daily' && !pending(run).length && !state.completedSets.includes(run.set)) state.completedSets.push(run.set);
+            revealed = false;
+            stopSpeaking();
+            save();
+            renderQuiz(true);
+        });
+        // Refresh the daily assignment when returning after midnight.
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) { revealed = false; renderQuiz(); }
+        });
+        renderQuiz();
+    })();
+    </script>
 </body>
 </html>
+
